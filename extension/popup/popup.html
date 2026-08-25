@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Education Assistant</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="brand">
+        <div class="logo-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="title">Smart Education Assistant</h1>
+          <p class="subtitle" id="accountStatusText">Account: Not connected</p>
+        </div>
+      </div>
+      <span class="version-tag" id="statusBadgeTag">✓ Extension installed</span>
+    </header>
+
+    <!-- Main Content -->
+    <main class="content">
+      <!-- Website Hostname Status Card -->
+      <section class="card website-card">
+        <div class="status-row">
+          <span class="label">Current website:</span>
+          <span class="value hostname" id="currentWebsite">Detecting...</span>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- DISCONNECTED VIEW: CODE PAIRING FORM -->
+      <!-- ========================================== -->
+      <section id="disconnectedSection" class="space-y-3">
+        <button id="btnOpenDashboard" class="btn btn-secondary w-full">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+          Connect Account (Get Code)
+        </button>
+
+        <div class="card code-card">
+          <label for="inputPairingCode" class="block-label">
+            Enter connection code:
+          </label>
+          <div class="code-input-group">
+            <input
+              type="text"
+              id="inputPairingCode"
+              placeholder="ABC-123-XYZ"
+              maxlength="11"
+              autocomplete="off"
+              spellcheck="false"
+              class="code-input"
+            />
+            <button id="btnSubmitCode" class="btn btn-primary btn-connect">
+              Connect
+            </button>
+          </div>
+          <p class="hint-text">
+            Generate code at: <span class="url-hint">localhost:3000/dashboard/extension</span>
+          </p>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- CONNECTED VIEW: FORM DETECTION & ACTIONS -->
+      <!-- ========================================== -->
+      <section id="connectedSection" class="space-y-3 hidden">
+        <div class="card connected-banner">
+          <div class="banner-content">
+            <div class="check-icon">✓</div>
+            <div>
+              <span class="banner-title">Connected ✓</span>
+              <span class="banner-sub">Account connected</span>
+            </div>
+          </div>
+          <span class="user-pill" id="displayUserId">User Active</span>
+        </div>
+
+        <div class="actions-group">
+          <button id="btnAnalyzeForm" class="btn btn-primary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            Analyze Form
+          </button>
+          <button id="btnDisconnect" class="btn btn-outline-danger">
+            Disconnect
+          </button>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- VIEW 1: SMART FIELD MAPPING RESULTS -->
+      <!-- ========================================== -->
+      <section id="mappingResultsSection" class="results-section hidden">
+        <div class="section-header">
+          <div class="results-title-group">
+            <h2 class="section-title">FORM ANALYZED ✓</h2>
+            <span id="fieldsDetectedSummary" class="fields-summary">Fields detected: 0</span>
+          </div>
+          <button id="btnToggleReviewMode" class="btn btn-review-sm">
+            Review Mappings
+          </button>
+        </div>
+
+        <div class="mapping-section-header">
+          <span class="mapping-section-title">SMART FIELD MAPPING</span>
+          <span id="mappingStatsBadge" class="badge badge-primary">0 Mapped</span>
+        </div>
+
+        <!-- Mappings List -->
+        <div class="mapping-list-container">
+          <div id="mappingList" class="mapping-list"></div>
+        </div>
+
+        <!-- Action to Preview Values -->
+        <div class="preview-action-footer">
+          <button id="btnFetchProfilePreview" class="btn btn-primary w-full">
+            Preview Profile Values →
+          </button>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- VIEW 2: SECURE PROFILE VALUE PREVIEW (STEP 6C & STEP 7) -->
+      <!-- ========================================== -->
+      <section id="valuesPreviewSection" class="results-section hidden">
+        <div class="section-header">
+          <div class="results-title-group">
+            <h2 class="section-title text-emerald">PROFILE VALUES READY</h2>
+            <span id="valuesSummaryText" class="fields-summary">Review verified data before autofill</span>
+          </div>
+          <button id="btnBackToMapping" class="btn btn-review-sm">
+            ← Edit Mappings
+          </button>
+        </div>
+
+        <!-- Values Cards List -->
+        <div class="values-list-container">
+          <div id="valuesPreviewList" class="values-list"></div>
+        </div>
+
+        <!-- Autofill Confirmation Prompt (Step 7.1) -->
+        <div id="autofillConfirmBox" class="confirm-box hidden">
+          <div class="confirm-box-content">
+            <div class="confirm-title-row">
+              <span class="confirm-icon">⚠</span>
+              <span id="confirmMessageText" class="confirm-text">You are about to fill 0 fields on this website.</span>
+            </div>
+            <p class="confirm-subtext">Verified profile values will be entered directly into the webpage.</p>
+            <div class="confirm-actions">
+              <button id="btnCancelAutofill" class="btn btn-secondary btn-sm">
+                Cancel
+              </button>
+              <button id="btnConfirmAutofill" class="btn btn-success btn-sm">
+                Fill Fields →
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fill Button Trigger -->
+        <div class="preview-action-footer">
+          <button id="btnFillApprovedFields" class="btn btn-success w-full">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+            ✓ Fill Approved Fields
+          </button>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- VIEW 3: AUTOFILL RESULTS REPORT (STEP 7.17) -->
+      <!-- ========================================== -->
+      <section id="autofillResultsSection" class="results-section hidden">
+        <div class="section-header">
+          <div class="results-title-group">
+            <h2 class="section-title text-emerald">AUTOFILL COMPLETE ✓</h2>
+            <span class="fields-summary">DOM verification completed</span>
+          </div>
+          <button id="btnResetToValues" class="btn btn-review-sm">
+            Review Values
+          </button>
+        </div>
+
+        <!-- Result Stats Badges -->
+        <div class="autofill-stats-grid">
+          <div class="stat-pill stat-filled">
+            <span class="stat-icon">✓</span>
+            <span id="statFilledCount">0 fields filled</span>
+          </div>
+          <div class="stat-pill stat-needs-input">
+            <span class="stat-icon">⚠</span>
+            <span id="statNeedsInputCount">0 need input</span>
+          </div>
+          <div class="stat-pill stat-skipped">
+            <span class="stat-icon">🔒</span>
+            <span id="statSkippedCount">0 skipped</span>
+          </div>
+        </div>
+
+        <!-- Detailed Results List -->
+        <div class="values-list-container">
+          <div id="autofillResultsList" class="values-list"></div>
+        </div>
+
+        <div class="preview-action-footer">
+          <button id="btnDoneAutofill" class="btn btn-primary w-full">
+            Done (Verify on Page)
+          </button>
+        </div>
+      </section>
+
+      <!-- Feedback / Error Message Box -->
+      <div id="errorMessageBox" class="error-box hidden"></div>
+      <div id="infoMessageBox" class="info-box hidden"></div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p class="security-text">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        No automated submission • Manual review & CAPTCHA/OTP control
+      </p>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

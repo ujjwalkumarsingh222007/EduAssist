@@ -6,9 +6,10 @@ import { NextRequest, NextResponse } from "next/server";
 export function getCorsHeaders(request: NextRequest): Record<string, string> {
   const origin = request.headers.get("origin") || "*";
   
-  // Allow chrome-extension origins, localhost, 127.0.0.1, or same-origin
+  // Allow chrome-extension origins, production Vercel app, localhost, 127.0.0.1, or same-origin
   const isAllowedOrigin =
     origin.startsWith("chrome-extension://") ||
+    origin.includes("edu-assist-two.vercel.app") ||
     origin.includes("localhost") ||
     origin.includes("127.0.0.1") ||
     origin === "*";

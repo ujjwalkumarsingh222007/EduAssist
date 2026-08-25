@@ -7,8 +7,6 @@
  * Real DOM element verification and green highlight rings.
  */
 
-const API_BASE_URL = "http://localhost:3000";
-
 // In-Memory Session Cache for field mappings
 const sessionMappingCache = new Map();
 
@@ -1105,8 +1103,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 4. Open Website Dashboard
   if (btnOpenDashboard) {
-    btnOpenDashboard.addEventListener("click", () => {
-      chrome.tabs.create({ url: `${API_BASE_URL}/dashboard/extension` });
+    btnOpenDashboard.addEventListener("click", async () => {
+      const baseUrl = typeof getApiBaseUrl === "function" ? await getApiBaseUrl() : "https://edu-assist-two.vercel.app";
+      chrome.tabs.create({ url: `${baseUrl}/dashboard/extension` });
     });
   }
 
@@ -1124,12 +1123,13 @@ document.addEventListener("DOMContentLoaded", () => {
       btnSubmitCode.textContent = "Verifying...";
       hideMessages();
 
-      chrome.runtime.sendMessage({ type: "SUBMIT_PAIRING_CODE", code }, (res) => {
+      chrome.runtime.sendMessage({ type: "SUBMIT_PAIRING_CODE", code }, async (res) => {
         btnSubmitCode.disabled = false;
         btnSubmitCode.textContent = "Connect";
 
         if (chrome.runtime.lastError) {
-          showError("Server unavailable. Please ensure http://localhost:3000 is running.");
+          const baseUrl = typeof getApiBaseUrl === "function" ? await getApiBaseUrl() : "https://edu-assist-two.vercel.app";
+          showError(`Server unavailable. Please ensure EduAssist (${getDisplayDomain(baseUrl)}) is reachable.`);
           return;
         }
 
@@ -1392,7 +1392,8 @@ document.addEventListener("DOMContentLoaded", () => {
       (res) => {
         if (chrome.runtime.lastError) {
           console.warn("[SEA] Profile API request failed: Runtime messaging error", chrome.runtime.lastError);
-          if (callback) callback({ success: false, error: "Server unavailable. Please ensure http://localhost:3000 is running." });
+          const baseUrl = typeof getApiBaseUrl === "function" ? await getApiBaseUrl() : "https://edu-assist-two.vercel.app";
+          if (callback) callback({ success: false, error: `Server unavailable. Please ensure EduAssist (${getDisplayDomain(baseUrl)}) is reachable.` });
           return;
         }
 

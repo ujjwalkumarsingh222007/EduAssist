@@ -1,14 +1,15 @@
 /**
  * Smart Education Assistant - Background Service Worker (MV3)
- * Manages pairing code exchange, connection tokens, and secure profile fields retrieval (Step 6C).
+ * Manages pairing code exchange, connection tokens, and secure profile fields retrieval.
+ * Supports both Production (https://edu-assist-two.vercel.app) and Localhost (http://localhost:3000).
  */
 
-const API_BASE_URL = "http://localhost:3000";
+importScripts("config.js");
 
 // Categorize fetch and server errors safely without leaking sensitive information
-function categorizeError(status, data, isNetworkError = false) {
+function categorizeError(status, data, isNetworkError = false, domain = "edu-assist-two.vercel.app") {
   if (isNetworkError) {
-    return "Server unavailable. Please ensure http://localhost:3000 is running.";
+    return `Server unavailable. Please ensure EduAssist (${domain}) is reachable.`;
   }
 
   if (data && typeof data.error === "string") {
@@ -37,7 +38,10 @@ function categorizeError(status, data, isNetworkError = false) {
 
 // Verify connection against Next.js API
 async function checkConnectionWithServer(connectionId) {
-  const url = `${API_BASE_URL}/api/extension/profile`;
+  const baseUrl = await getApiBaseUrl();
+  const domain = getDisplayDomain(baseUrl);
+  const url = `${baseUrl}/api/extension/profile`;
+
   try {
     const res = await fetch(url, {
       method: "GET",
@@ -52,14 +56,14 @@ async function checkConnectionWithServer(connectionId) {
     }
 
     if (!res.ok) {
-      return { valid: false, error: "Server unavailable. Please ensure http://localhost:3000 is running." };
+      return { valid: false, error: `Server unavailable. Please ensure EduAssist (${domain}) is reachable.` };
     }
 
     const data = await res.json();
     return { valid: true, data };
   } catch (err) {
     console.warn(`[SEA] Connection verification failed at ${url}:`, err);
-    return { valid: false, error: "Server unavailable. Please ensure http://localhost:3000 is running." };
+    return { valid: false, error: `Server unavailable. Please ensure EduAssist (${domain}) is reachable.` };
   }
 }
 
@@ -67,21 +71,30 @@ async function checkConnectionWithServer(connectionId) {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // 1. Open Website Extension Setup Page
   if (message.type === "OPEN_DASHBOARD") {
-    chrome.tabs.create({ url: `${API_BASE_URL}/dashboard/extension` });
-    sendResponse({ success: true });
+    (async () => {
+      const baseUrl = await getApiBaseUrl();
+      const targetPath = message.path || "/dashboard/extension";
+      chrome.tabs.create({ url: `${baseUrl}${targetPath}` });
+      sendResponse({ success: true, url: `${baseUrl}${targetPath}` });
+    })();
     return true;
   }
 
   // 2. Submit One-Time Pairing Code
   if (message.type === "SUBMIT_PAIRING_CODE") {
     (async () => {
-      const url = `${API_BASE_URL}/api/extension/connect`;
+      const baseUrl = await getApiBaseUrl();
+      const domain = getDisplayDomain(baseUrl);
+      const url = `${baseUrl}/api/extension/connect`;
+
       try {
         const { code } = message;
         if (!code || typeof code !== "string" || !code.trim()) {
           sendResponse({ success: false, error: "Invalid connection code" });
           return;
         }
+
+        console.log(`[SEA] Connecting to EduAssist at: ${url}`);
 
         const res = await fetch(url, {
           method: "POST",
@@ -92,7 +105,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const data = await res.json().catch(() => ({}));
 
         if (!res.ok || !data.connected || !data.connection_id) {
-          const safeError = categorizeError(res.status, data, false);
+          const safeError = categorizeError(res.status, data, false, domain);
           sendResponse({
             success: false,
             error: safeError,
@@ -100,12 +113,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           return;
         }
 
-        // Store connection securely in chrome.storage.local
+        // Store connection securely in chrome.storage.local (NO sensitive profile data stored permanently)
         const sessionPayload = {
           connection_id: data.connection_id,
           user_id: data.user_id,
           connected: true,
           connected_at: new Date().toISOString(),
+          server_url: baseUrl,
         };
 
         await chrome.storage.local.set({ extension_session: sessionPayload });
@@ -116,10 +130,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           success: true,
           user_id: data.user_id,
           connection_id: data.connection_id,
+          server_url: baseUrl,
         });
       } catch (err) {
         console.error(`[SEA] Pairing network error at ${url}:`, err);
-        sendResponse({ success: false, error: "Server unavailable. Please ensure http://localhost:3000 is running." });
+        sendResponse({
+          success: false,
+          error: `Server unavailable. Please ensure EduAssist (${domain}) is reachable.`,
+        });
       }
     })();
     return true;
@@ -129,9 +147,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "DISCONNECT_EXTENSION") {
     (async () => {
       try {
+        const baseUrl = await getApiBaseUrl();
         const { extension_session } = await chrome.storage.local.get("extension_session");
         if (extension_session && extension_session.connection_id) {
-          fetch(`${API_BASE_URL}/api/extension/disconnect`, {
+          fetch(`${baseUrl}/api/extension/disconnect`, {
             method: "POST",
             headers: {
               Authorization: `Bearer ${extension_session.connection_id}`,
@@ -154,10 +173,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // 4. Check Connection Status
   if (message.type === "GET_CONNECTION_STATUS") {
     (async () => {
+      const baseUrl = await getApiBaseUrl();
+      const domain = getDisplayDomain(baseUrl);
+
       try {
         const { extension_session } = await chrome.storage.local.get("extension_session");
         if (!extension_session || !extension_session.connection_id) {
-          sendResponse({ connected: false, error: "Not connected" });
+          sendResponse({ connected: false, error: "Not connected", server_url: baseUrl });
           return;
         }
 
@@ -168,6 +190,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           sendResponse({
             connected: true,
             user_id: check.data?.user_id || extension_session.user_id,
+            server_url: baseUrl,
           });
         } else {
           if (check.error === "Extension connection expired.") {
@@ -177,10 +200,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           sendResponse({
             connected: false,
             error: check.error || "Connection failed",
+            server_url: baseUrl,
           });
         }
       } catch (err) {
-        sendResponse({ connected: false, error: "Server unavailable. Please ensure http://localhost:3000 is running." });
+        sendResponse({
+          connected: false,
+          error: `Server unavailable. Please ensure EduAssist (${domain}) is reachable.`,
+          server_url: baseUrl,
+        });
       }
     })();
     return true;
@@ -189,6 +217,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // 5. Fetch Profile Fields for Approved Mappings (Step 6C)
   if (message.type === "FETCH_PROFILE_FIELDS") {
     (async () => {
+      const baseUrl = await getApiBaseUrl();
+      const domain = getDisplayDomain(baseUrl);
+
       try {
         const { extension_session } = await chrome.storage.local.get("extension_session");
         if (!extension_session || !extension_session.connection_id) {
@@ -197,7 +228,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           return;
         }
 
-        const url = `${API_BASE_URL}/api/extension/profile-fields`;
+        const url = `${baseUrl}/api/extension/profile-fields`;
         console.log(`[SEA] Profile API URL: ${url}`);
 
         const res = await fetch(url, {
@@ -217,7 +248,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const data = await res.json().catch(() => ({}));
 
         if (!res.ok) {
-          const safeError = categorizeError(res.status, data, false);
+          const safeError = categorizeError(res.status, data, false, domain);
           console.warn(`[SEA] Profile API request failed: HTTP ${res.status} -> ${safeError}`);
           sendResponse({
             success: false,
@@ -229,7 +260,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse(data);
       } catch (err) {
         console.error("[SEA] Profile API request failed: Network/Fetch error", err);
-        sendResponse({ success: false, error: "Server unavailable. Please ensure http://localhost:3000 is running." });
+        sendResponse({
+          success: false,
+          error: `Server unavailable. Please ensure EduAssist (${domain}) is reachable.`,
+        });
       }
     })();
     return true;
@@ -238,6 +272,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // 6. Intelligent Semantic Field Mapping (Step 6D - AI Fallback)
   if (message.type === "SEMANTIC_MAP_FIELDS") {
     (async () => {
+      const baseUrl = await getApiBaseUrl();
+      const domain = getDisplayDomain(baseUrl);
+
       try {
         const { extension_session } = await chrome.storage.local.get("extension_session");
         if (!extension_session || !extension_session.connection_id) {
@@ -245,7 +282,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           return;
         }
 
-        const url = `${API_BASE_URL}/api/extension/semantic-map`;
+        const url = `${baseUrl}/api/extension/semantic-map`;
         const res = await fetch(url, {
           method: "POST",
           headers: {
@@ -259,7 +296,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          const safeError = categorizeError(res.status, data, false);
+          const safeError = categorizeError(res.status, data, false, domain);
           sendResponse({ success: false, error: safeError });
           return;
         }
@@ -267,7 +304,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse(data);
       } catch (err) {
         console.error("[SEA] Semantic Map API network error:", err);
-        sendResponse({ success: false, error: "Server unavailable. Please ensure http://localhost:3000 is running." });
+        sendResponse({
+          success: false,
+          error: `Server unavailable. Please ensure EduAssist (${domain}) is reachable.`,
+        });
       }
     })();
     return true;

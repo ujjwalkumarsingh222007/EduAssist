@@ -15,6 +15,13 @@ const CONFIG = {
 };
 
 /**
+ * Synchronously returns the default active API base URL.
+ */
+function getActiveServerUrl() {
+  return CONFIG.PRODUCTION_URL;
+}
+
+/**
  * Returns the currently configured API base URL (Production by default, or Localhost if configured in storage).
  */
 async function getApiBaseUrl() {
@@ -41,7 +48,7 @@ async function getApiBaseUrl() {
  */
 function getDisplayDomain(url) {
   try {
-    const parsed = new URL(url);
+    const parsed = new URL(url || CONFIG.PRODUCTION_URL);
     return parsed.host;
   } catch {
     return "edu-assist-two.vercel.app";
@@ -50,5 +57,5 @@ function getDisplayDomain(url) {
 
 // Export for Node/CommonJS/ESM test scripts if needed
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { CONFIG, getApiBaseUrl, getDisplayDomain };
+  module.exports = { CONFIG, getActiveServerUrl, getApiBaseUrl, getDisplayDomain };
 }

@@ -1103,8 +1103,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 4. Open Website Dashboard
   if (btnOpenDashboard) {
-    btnOpenDashboard.addEventListener("click", async () => {
-      const baseUrl = typeof getApiBaseUrl === "function" ? await getApiBaseUrl() : "https://edu-assist-two.vercel.app";
+    btnOpenDashboard.addEventListener("click", () => {
+      const baseUrl = typeof getActiveServerUrl === "function" ? getActiveServerUrl() : "https://edu-assist-two.vercel.app";
       chrome.tabs.create({ url: `${baseUrl}/dashboard/extension` });
     });
   }
@@ -1123,13 +1123,13 @@ document.addEventListener("DOMContentLoaded", () => {
       btnSubmitCode.textContent = "Verifying...";
       hideMessages();
 
-      chrome.runtime.sendMessage({ type: "SUBMIT_PAIRING_CODE", code }, async (res) => {
+      chrome.runtime.sendMessage({ type: "SUBMIT_PAIRING_CODE", code }, (res) => {
         btnSubmitCode.disabled = false;
         btnSubmitCode.textContent = "Connect";
 
         if (chrome.runtime.lastError) {
-          const baseUrl = typeof getApiBaseUrl === "function" ? await getApiBaseUrl() : "https://edu-assist-two.vercel.app";
-          showError(`Server unavailable. Please ensure EduAssist (${getDisplayDomain(baseUrl)}) is reachable.`);
+          const domain = typeof getDisplayDomain === "function" ? getDisplayDomain(CONFIG?.PRODUCTION_URL) : "edu-assist-two.vercel.app";
+          showError(`Unable to connect to EduAssist server (${domain}). Please try again.`);
           return;
         }
 
@@ -1392,8 +1392,8 @@ document.addEventListener("DOMContentLoaded", () => {
       (res) => {
         if (chrome.runtime.lastError) {
           console.warn("[SEA] Profile API request failed: Runtime messaging error", chrome.runtime.lastError);
-          const baseUrl = typeof getApiBaseUrl === "function" ? await getApiBaseUrl() : "https://edu-assist-two.vercel.app";
-          if (callback) callback({ success: false, error: `Server unavailable. Please ensure EduAssist (${getDisplayDomain(baseUrl)}) is reachable.` });
+          const domain = typeof getDisplayDomain === "function" ? getDisplayDomain(CONFIG?.PRODUCTION_URL) : "edu-assist-two.vercel.app";
+          if (callback) callback({ success: false, error: `Unable to connect to EduAssist server (${domain}). Please try again.` });
           return;
         }
 

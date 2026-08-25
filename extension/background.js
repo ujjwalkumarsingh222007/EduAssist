@@ -9,31 +9,35 @@ importScripts("config.js");
 // Categorize fetch and server errors safely without leaking sensitive information
 function categorizeError(status, data, isNetworkError = false, domain = "edu-assist-two.vercel.app") {
   if (isNetworkError) {
-    return `Server unavailable. Please ensure EduAssist (${domain}) is reachable.`;
+    return `Unable to connect to EduAssist server (${domain}). Please check your connection.`;
   }
 
   if (data && typeof data.error === "string") {
     const err = data.error.toUpperCase();
-    if (err.includes("CONNECTION_EXPIRED") || err.includes("SESSION_EXPIRED") || err.includes("EXPIRED")) {
-      return "Extension connection expired.";
+    if (err.includes("CONNECTION_EXPIRED") || err.includes("SESSION_EXPIRED") || err.includes("CODE_EXPIRED") || err.includes("EXPIRED")) {
+      return "Authentication expired. Please reconnect your account.";
     }
     if (err.includes("AUTHENTICATION_FAILED") || err.includes("NOT_AUTHENTICATED") || err.includes("AUTH")) {
-      return "Profile API authentication failed.";
+      return "Profile API authentication failed (401). Please reconnect your account.";
     }
     if (err.includes("NO_FIELDS_REQUESTED") || err.includes("PROFILE_NOT_FOUND")) {
       return "Requested profile fields are unavailable.";
     }
+    if (err.includes("INVALID_CODE")) {
+      return data.error || "Invalid connection code. Please generate a new code on the dashboard.";
+    }
     if (err.includes("SERVER_ERROR")) {
-      return "Server error occurred.";
+      return `EduAssist server returned an error (${status || 500}).`;
     }
     return data.message || data.error;
   }
 
-  if (status === 400) return "Requested profile fields are unavailable.";
-  if (status === 401) return "Extension connection expired.";
-  if (status >= 500) return "Server error occurred.";
+  if (status === 400) return "Invalid request or connection code.";
+  if (status === 401) return "Authentication expired. Please reconnect your account (401).";
+  if (status === 404) return "Profile API endpoint not found (404).";
+  if (status >= 500) return `EduAssist server returned an error (${status}).`;
 
-  return "Profile request failed.";
+  return `EduAssist request failed (${status}).`;
 }
 
 // Verify connection against Next.js API

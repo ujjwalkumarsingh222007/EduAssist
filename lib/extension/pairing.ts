@@ -40,6 +40,15 @@ const memoryConnections: Map<string, ExtensionConnectionRecord> =
   globalThis.__smart_assistant_connections || new Map<string, ExtensionConnectionRecord>();
 globalThis.__smart_assistant_connections = memoryConnections;
 
+function getSigningSecret(): string {
+  return (
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.NEXTAUTH_SECRET ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    "sea_secure_extension_key_2026"
+  );
+}
+
 /**
  * Normalizes user-entered connection code (removes whitespace and hyphens, converts to uppercase)
  */
@@ -93,6 +102,62 @@ export function getSupabaseClient(authToken?: string) {
 }
 
 /**
+ * Creates a cryptographically signed connection ID that can be verified statelessly across any Vercel serverless container.
+ */
+export function createSignedConnectionId(userId: string): string {
+  const timestamp = Date.now();
+  const payload = `${userId}:${timestamp}`;
+  const hmac = crypto.createHmac("sha256", getSigningSecret()).update(payload).digest("hex");
+  const encodedPayload = Buffer.from(payload).toString("base64url");
+  return `ext_conn_${encodedPayload}_${hmac}`;
+}
+
+/**
+ * Verifies a cryptographically signed connection ID statelessly.
+ */
+export function verifySignedConnectionId(connectionId: string): { valid: boolean; userId: string | null } {
+  if (!connectionId || !connectionId.startsWith("ext_conn_")) {
+    return { valid: false, userId: null };
+  }
+
+  const trimmed = connectionId.replace("ext_conn_", "");
+  const lastUnderscore = trimmed.lastIndexOf("_");
+  if (lastUnderscore === -1) {
+    return { valid: false, userId: null };
+  }
+
+  const encodedPayload = trimmed.slice(0, lastUnderscore);
+  const receivedHmac = trimmed.slice(lastUnderscore + 1);
+
+  try {
+    const payload = Buffer.from(encodedPayload, "base64url").toString("utf-8");
+    const parts = payload.split(":");
+    if (parts.length < 2) return { valid: false, userId: null };
+
+    const userId = parts[0];
+    const timestamp = parseInt(parts[1], 10);
+
+    if (!userId || !timestamp || isNaN(timestamp)) {
+      return { valid: false, userId: null };
+    }
+
+    // 30 days validity
+    if (Date.now() - timestamp > 30 * 24 * 60 * 60 * 1000) {
+      return { valid: false, userId: null };
+    }
+
+    const expectedHmac = crypto.createHmac("sha256", getSigningSecret()).update(payload).digest("hex");
+    if (crypto.timingSafeEqual(Buffer.from(receivedHmac), Buffer.from(expectedHmac))) {
+      return { valid: true, userId };
+    }
+  } catch {
+    // Fallback
+  }
+
+  return { valid: false, userId: null };
+}
+
+/**
  * Stores a newly generated pairing code (5-minute expiration, unused)
  */
 export async function storePairingCode(
@@ -116,7 +181,7 @@ export async function storePairingCode(
   // 1. Store in memory singleton
   memoryPairingCodes.set(codeHash, record);
 
-  // 2. Persist to Supabase if available
+  // 2. Persist to Supabase
   const supabase = getSupabaseClient(authToken);
   if (supabase) {
     try {
@@ -129,6 +194,32 @@ export async function storePairingCode(
       });
     } catch {
       // Memory store is authoritative fallback
+    }
+
+    try {
+      // Also update in profiles table JSONB for cross-container serverless persistence
+      const { data: profileRow } = await supabase
+        .from("profiles")
+        .select("profile_data")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      const existingData = profileRow?.profile_data || {};
+      await supabase
+        .from("profiles")
+        .update({
+          profile_data: {
+            ...existingData,
+            extension_pairing: {
+              code_hash: codeHash,
+              expires_at: expiresAt,
+              used: false,
+            },
+          },
+        })
+        .eq("user_id", userId);
+    } catch {
+      // Ignore
     }
   }
 
@@ -163,7 +254,7 @@ export async function verifyAndConsumePairingCode(rawCode: string): Promise<Veri
     record = memoryPairingCodes.get(codeHash)!;
   }
 
-  // 2. Check Supabase if not found in memory
+  // 2. Check Supabase extension_pairing_codes if not found in memory
   if (!record) {
     const supabase = getSupabaseClient();
     if (supabase) {
@@ -176,6 +267,38 @@ export async function verifyAndConsumePairingCode(rawCode: string): Promise<Veri
 
         if (data) {
           record = data as PairingCodeRecord;
+        }
+      } catch {
+        // Fallback
+      }
+    }
+  }
+
+  // 3. Check Supabase profiles table fallback
+  if (!record) {
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, profile_data")
+          .not("profile_data", "is", null);
+
+        if (profiles) {
+          for (const p of profiles) {
+            const pairing = p.profile_data?.extension_pairing;
+            if (pairing && pairing.code_hash === codeHash) {
+              record = {
+                id: crypto.randomUUID(),
+                user_id: p.user_id,
+                code_hash: codeHash,
+                expires_at: pairing.expires_at,
+                used: pairing.used,
+                created_at: new Date().toISOString(),
+              };
+              break;
+            }
+          }
         }
       } catch {
         // Fallback
@@ -209,10 +332,35 @@ export async function verifyAndConsumePairingCode(rawCode: string): Promise<Veri
     } catch {
       // Memory state is already marked
     }
+
+    try {
+      const { data: profileRow } = await supabase
+        .from("profiles")
+        .select("profile_data")
+        .eq("user_id", record.user_id)
+        .maybeSingle();
+
+      if (profileRow?.profile_data?.extension_pairing) {
+        await supabase
+          .from("profiles")
+          .update({
+            profile_data: {
+              ...profileRow.profile_data,
+              extension_pairing: {
+                ...profileRow.profile_data.extension_pairing,
+                used: true,
+              },
+            },
+          })
+          .eq("user_id", record.user_id);
+      }
+    } catch {
+      // Fallback
+    }
   }
 
-  // Generate cryptographically random connection ID
-  const connectionId = `ext_conn_${crypto.randomBytes(24).toString("hex")}`;
+  // Generate cryptographically signed connection ID
+  const connectionId = createSignedConnectionId(record.user_id);
   const connectionRecord: ExtensionConnectionRecord = {
     id: crypto.randomUUID(),
     user_id: record.user_id,
@@ -284,19 +432,31 @@ export async function validateExtensionConnection(
     }
   }
 
-  if (!conn || conn.revoked_at) {
-    return { valid: false, userId: null };
+  // If found in database or memory
+  if (conn) {
+    if (conn.revoked_at) {
+      return { valid: false, userId: null };
+    }
+    conn.last_seen_at = new Date().toISOString();
+    memoryConnections.set(connectionId, conn);
+    return {
+      valid: true,
+      userId: conn.user_id,
+      authToken: conn.auth_token,
+      userProfile: conn.user_profile,
+    };
   }
 
-  conn.last_seen_at = new Date().toISOString();
-  memoryConnections.set(connectionId, conn);
+  // Stateless cryptographic signature verification fallback (survives any serverless cold start)
+  const statelessVerification = verifySignedConnectionId(connectionId);
+  if (statelessVerification.valid && statelessVerification.userId) {
+    return {
+      valid: true,
+      userId: statelessVerification.userId,
+    };
+  }
 
-  return {
-    valid: true,
-    userId: conn.user_id,
-    authToken: conn.auth_token,
-    userProfile: conn.user_profile,
-  };
+  return { valid: false, userId: null };
 }
 
 /**

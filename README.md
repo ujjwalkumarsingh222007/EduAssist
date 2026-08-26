@@ -1,36 +1,21 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+# EduAssist
 
-First, run the development server:
+**EduAssist** is an AI-powered student assistance platform that helps students discover scholarships, internships, government schemes, and other opportunities based on their personal and academic profiles.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Students can upload documents and use AI to extract relevant information into a **verified student profile**. EduAssist then matches the profile with available opportunities and recommends the most relevant ones.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The platform also aims to reduce repetitive application work through **AI-powered form assistance and browser-extension-based autofill**, allowing students to reuse their verified information across different application websites.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Key Features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+* AI-powered document and data extraction
+* Centralized verified student profile
+* Scholarship and internship discovery
+* AI-based eligibility matching
+* Personalized opportunity recommendations
+* Form autofill assistance
+* Secure student data management
+* User verification before application use
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Goal:** Make finding and applying for student opportunities **faster, easier, and more accessible** through one intelligent platform.

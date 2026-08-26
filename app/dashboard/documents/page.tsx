@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { StudentDocument, DocumentType, ExtractionStatus } from "@/lib/types/document";
 import ExtractionReviewModal from "@/components/documents/ExtractionReviewModal";
+import { evaluateDocumentExpiry } from "@/lib/health/expiry-checker";
 import {
   FileText,
   Upload,
@@ -618,12 +619,36 @@ export default function DocumentsPage() {
                           </span>
                           <span className="text-slate-300">•</span>
                           <span className="text-xs text-slate-400">
-                            {new Date(doc.created_at).toLocaleDateString(undefined, {
+                            Uploaded: {new Date(doc.created_at).toLocaleDateString(undefined, {
                               month: "short",
                               day: "numeric",
                               year: "numeric",
                             })}
                           </span>
+                          <span className="text-slate-300">•</span>
+                          {(() => {
+                            const expiryInfo = evaluateDocumentExpiry(
+                              doc.id,
+                              doc.file_name,
+                              doc.document_type,
+                              doc.extracted_data
+                            );
+                            return (
+                              <span
+                                className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border ${
+                                  expiryInfo.badge_color === "red"
+                                    ? "bg-rose-50 text-rose-700 border-rose-200"
+                                    : expiryInfo.badge_color === "yellow"
+                                    ? "bg-amber-50 text-amber-700 border-amber-200"
+                                    : expiryInfo.badge_color === "green"
+                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                    : "bg-slate-50 text-slate-500 border-slate-200"
+                                }`}
+                              >
+                                Validity: {expiryInfo.status_label}
+                              </span>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>

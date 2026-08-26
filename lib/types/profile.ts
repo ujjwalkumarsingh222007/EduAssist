@@ -485,6 +485,9 @@ export interface ProfileData {
   custom_fields?: Record<string, CustomFieldEntry>;
   custom_sections?: CustomSectionEntry[];
   scholarships?: Record<string, unknown>[];
+  document_health?: Record<string, unknown>;
+  action_center_tasks?: unknown[];
+  action_center_dismissed_reminders?: string[];
 
   meta?: {
     source_documents?: { id: string; name: string; type?: string; confirmed_at: string; document_number?: string }[];

@@ -21,6 +21,8 @@ import {
 import { StudentDocument, ExtractionStatus, DocumentType } from "@/lib/types/document";
 import { ProfileData } from "@/lib/types/profile";
 import { DashboardExtensionCard } from "@/components/extension/DashboardExtensionCard";
+import { DocumentHealthWidget } from "@/components/health/DocumentHealthWidget";
+import { computeDocumentHealth, UserDocumentItem } from "@/lib/health/document-health-service";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -33,14 +35,14 @@ export default async function DashboardPage() {
   // 1. Fetch Student Profile with profile_data JSONB
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, date_of_birth, gender, phone, address, city, state, country, profile_data, updated_at")
+    .select("id, user_id, full_name, date_of_birth, gender, phone, address, city, state, country, profile_data, updated_at")
     .eq("user_id", user.id)
     .maybeSingle();
 
-  // 2. Fetch User Documents (Recent list + statistics)
+  // 2. Fetch User Documents (Recent list + statistics + extracted data for health audit)
   const { data: rawDocuments } = await supabase
     .from("documents")
-    .select("id, file_name, file_path, document_type, extraction_status, created_at, updated_at")
+    .select("id, user_id, file_name, file_path, document_type, extraction_status, extracted_data, created_at, updated_at")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
@@ -50,6 +52,15 @@ export default async function DashboardPage() {
   const pData: ProfileData = profile?.profile_data || {};
   const fullName = profile?.full_name || (user.user_metadata?.name as string | undefined);
   const firstName = fullName?.split(" ")[0] ?? user.email?.split("@")[0] ?? "Student";
+
+  // Document Health Computation (strictly user-scoped)
+  const dismissedReminders = (pData.document_health?.dismissed_reminders as string[]) || [];
+  const healthState = computeDocumentHealth(
+    user.id,
+    (rawDocuments as UserDocumentItem[]) || [],
+    profile,
+    dismissedReminders
+  );
 
   // Document Statistics
   const totalDocs = documents.length;
@@ -297,6 +308,9 @@ export default async function DashboardPage() {
           </Link>
         </div>
       </div>
+
+      {/* Document Health & Consistency Audit Widget */}
+      <DocumentHealthWidget initialHealth={healthState} userId={user.id} />
 
       {/* Chrome Extension Companion Card */}
       <DashboardExtensionCard userId={user.id} />

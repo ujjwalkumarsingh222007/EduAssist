@@ -716,6 +716,63 @@ export default function UniversalProfilePage() {
     return text.toLowerCase().includes(searchFilter.toLowerCase().trim());
   };
 
+  // Dynamic Section Visibility Flags (Prevents duplicate & empty static sections)
+  const has10thData = Boolean(
+    activeEditSection === "secondary_10th" ||
+    (pData.secondary_10th && (
+      pData.secondary_10th.school_name ||
+      pData.secondary_10th.board_name ||
+      pData.secondary_10th.roll_number ||
+      pData.secondary_10th.registration_number ||
+      pData.secondary_10th.percentage ||
+      pData.secondary_10th.total_marks ||
+      pData.secondary_10th.obtained_marks ||
+      (pData.secondary_10th.subjects && pData.secondary_10th.subjects.length > 0) ||
+      (pData.secondary_10th.custom_fields && Object.keys(pData.secondary_10th.custom_fields).length > 0)
+    ))
+  );
+
+  const has12thData = Boolean(
+    activeEditSection === "senior_secondary_12th" ||
+    (pData.senior_secondary_12th && (
+      pData.senior_secondary_12th.school_name ||
+      pData.senior_secondary_12th.board_name ||
+      pData.senior_secondary_12th.stream ||
+      pData.senior_secondary_12th.roll_number ||
+      pData.senior_secondary_12th.registration_number ||
+      pData.senior_secondary_12th.percentage ||
+      pData.senior_secondary_12th.total_marks ||
+      pData.senior_secondary_12th.obtained_marks ||
+      (pData.senior_secondary_12th.subjects && pData.senior_secondary_12th.subjects.length > 0) ||
+      (pData.senior_secondary_12th.custom_fields && Object.keys(pData.senior_secondary_12th.custom_fields).length > 0)
+    ))
+  );
+
+  const hasCollegeData = Boolean(
+    activeEditSection === "higher_education" ||
+    (pData.education && (
+      pData.education.institution_name ||
+      pData.education.university_name ||
+      pData.education.degree ||
+      pData.education.course ||
+      pData.education.roll_number ||
+      pData.education.percentage ||
+      pData.education.cgpa
+    ))
+  );
+
+  const hasSkillsData = Boolean(
+    activeEditSection === "skills" ||
+    (pData.skills && pData.skills.length > 0)
+  );
+
+  const hasFinancialData = Boolean(
+    activeEditSection === "financial" ||
+    (pData.eligibility && (pData.eligibility.annual_income || pData.eligibility.category || pData.eligibility.income_certificate_number))
+  );
+
+  const hasAnyEducationData = has10thData || has12thData || hasCollegeData;
+
   if (loading) {
     return (
       <div className="p-12 text-center max-w-5xl mx-auto space-y-3">
@@ -1324,9 +1381,45 @@ export default function UniversalProfilePage() {
       )}
 
       {/* =========================================================================
+          EDUCATION CALLOUT (When no academic documents uploaded yet)
+      ========================================================================= */}
+      {!hasAnyEducationData && (
+        <div className="bg-slate-50 border border-dashed border-slate-300 rounded-2xl p-8 text-center space-y-3 shadow-2xs">
+          <div className="w-12 h-12 bg-white rounded-2xl border border-slate-200 flex items-center justify-center mx-auto text-blue-600 shadow-2xs">
+            <GraduationCap className="w-6 h-6" />
+          </div>
+          <h4 className="text-sm font-bold text-slate-800">No Education Records Added Yet</h4>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            Upload your Class 10, Class 12, or College marksheets in the Documents Vault to dynamically generate verified education sections with subjects and marks breakdown.
+          </p>
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              href="/dashboard/documents"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors inline-flex items-center gap-1.5 shadow-2xs"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              Upload Marksheet
+            </Link>
+            <button
+              onClick={() => startEditSection("secondary_10th")}
+              className="px-3.5 py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors"
+            >
+              + Add Class 10
+            </button>
+            <button
+              onClick={() => startEditSection("senior_secondary_12th")}
+              className="px-3.5 py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors"
+            >
+              + Add Class 12
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
           SECTION 5: CLASS 10 / SECONDARY EDUCATION
       ========================================================================= */}
-      {matchesSearch("10th secondary marksheet roll percentage board") && (
+      {has10thData && matchesSearch("10th secondary marksheet roll percentage board") && (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
           <div className="p-5 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
             <div
@@ -1643,7 +1736,7 @@ export default function UniversalProfilePage() {
       {/* =========================================================================
           SECTION 6: CLASS 12 / SENIOR SECONDARY EDUCATION
       ========================================================================= */}
-      {matchesSearch("12th higher secondary marksheet stream pcm pcb percentage board") && (
+      {has12thData && matchesSearch("12th higher secondary marksheet stream pcm pcb percentage board") && (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
           <div className="p-5 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
             <div
@@ -1968,7 +2061,7 @@ export default function UniversalProfilePage() {
       {/* =========================================================================
           SECTION 7: HIGHER EDUCATION & COLLEGE
       ========================================================================= */}
-      {matchesSearch("university college degree btech course branch semester cgpa") && (
+      {hasCollegeData && matchesSearch("university college degree btech course branch semester cgpa") && (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
           <div className="p-5 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
             <div
@@ -2109,7 +2202,7 @@ export default function UniversalProfilePage() {
       {/* =========================================================================
           SECTION 8: TECHNICAL SKILLS & PROFICIENCY
       ========================================================================= */}
-      {matchesSearch("skills programming python react java git devops") && (
+      {hasSkillsData && matchesSearch("skills programming python react java git devops") && (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
           <div className="p-5 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
             <div
@@ -2220,7 +2313,7 @@ export default function UniversalProfilePage() {
       {/* =========================================================================
           SECTION 9: FINANCIAL & ELIGIBILITY CERTIFICATES
       ========================================================================= */}
-      {matchesSearch("financial income category caste domicile certificate ews obc sc st") && (
+      {hasFinancialData && matchesSearch("financial income category caste domicile certificate ews obc sc st") && (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
           <div className="p-5 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
             <div

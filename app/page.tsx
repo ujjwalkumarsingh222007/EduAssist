@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Navbar from "@/components/layout/Navbar";
-import { GraduationCap, FileText, Award, CheckCircle, Bot, Shield } from "lucide-react";
+import { GraduationCap, FileText, Award, CheckCircle, Sparkles, Shield } from "lucide-react";
 
 const features = [
   {
@@ -24,9 +24,9 @@ const features = [
     description: "Instantly check your eligibility for programs, grants, and opportunities.",
   },
   {
-    icon: Bot,
-    title: "AI Assistant",
-    description: "Get personalized help with forms, essays, and academic tasks using AI.",
+    icon: Sparkles,
+    title: "Document Intelligence",
+    description: "Automatically extract, verify, and auto-fill your credentials into application forms.",
   },
   {
     icon: Shield,

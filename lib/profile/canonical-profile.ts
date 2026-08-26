@@ -112,6 +112,9 @@ export function toCanonicalProfile(
       cgpa: (education.cgpa as string) || "",
     },
 
+    class10: (pData.secondary_10th as Record<string, unknown>) || {},
+    class12: (pData.senior_secondary_12th as Record<string, unknown>) || {},
+
     annual_income: (eligibility.annual_income as string) || (eligibility.family_income as string) || "",
     family_income: (eligibility.family_income as string) || (eligibility.annual_income as string) || "",
     income_certificate_number: (eligibility.income_certificate_number as string) || "",

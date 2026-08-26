@@ -293,11 +293,26 @@ export default function DocumentsPage() {
       setDeletingId(doc.id);
       const supabase = createClient();
 
-      // 1. Delete from storage
-      await supabase.storage.from("student-documents").remove([doc.file_path]);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-      // 2. Delete from database
-      const { error } = await supabase.from("documents").delete().eq("id", doc.id);
+      if (!user) {
+        setErrorMessage("You must be logged in to delete documents.");
+        return;
+      }
+
+      // 1. Delete from storage (strictly scoped to user.id path prefix)
+      if (doc.file_path.startsWith(`${user.id}/`)) {
+        await supabase.storage.from("student-documents").remove([doc.file_path]);
+      }
+
+      // 2. Delete from database (strictly scoped to user.id)
+      const { error } = await supabase
+        .from("documents")
+        .delete()
+        .eq("id", doc.id)
+        .eq("user_id", user.id);
 
       if (error) {
         setErrorMessage("Failed to delete document record from database.");

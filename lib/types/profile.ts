@@ -13,6 +13,27 @@ export interface MarksheetSubject {
   pass_fail?: "PASS" | "FAIL" | string;
 }
 
+export interface CustomFieldEntry {
+  key: string;
+  label: string;
+  value: string | number | boolean | null;
+  type?: "text" | "number" | "date" | "select" | "boolean" | string;
+  source_document_id?: string;
+  source_document_type?: string;
+  confidence?: number;
+  confirmed_at?: string;
+  verified?: boolean;
+  is_sensitive?: boolean;
+}
+
+export interface CustomSectionEntry {
+  section_id: string;
+  title: string;
+  category?: string;
+  fields: CustomFieldEntry[];
+  metadata?: Record<string, unknown>;
+}
+
 export interface MarksheetTable {
   id?: string;
   source_document_name?: string;
@@ -21,21 +42,31 @@ export interface MarksheetTable {
   board_name?: string;
   institution_name?: string;
   school_name?: string;
+  school_code?: string;
+  center_number?: string;
   roll_number?: string;
   registration_number?: string;
+  enrollment_number?: string;
   certificate_number?: string;
   year?: string;
   passing_year?: string;
+  examination_year?: string;
   result_date?: string;
   stream?: string;
   total_marks?: string | number;
   maximum_marks?: string | number;
+  obtained_marks?: string | number;
   percentage?: string | number;
   cgpa?: string | number;
   division?: string;
   grade?: string;
   result?: string;
+  first_name?: string;
+  middle_name?: string;
+  last_name?: string;
+  dob?: string;
   subjects?: MarksheetSubject[];
+  custom_fields?: Record<string, CustomFieldEntry>;
 }
 
 export interface VerifiedCertificate {
@@ -451,6 +482,9 @@ export interface ProfileData {
 
   confirmed_fields?: Record<string, ConfirmedFieldEntry>;
   conflicts?: FieldConflictEntry[];
+  custom_fields?: Record<string, CustomFieldEntry>;
+  custom_sections?: CustomSectionEntry[];
+  scholarships?: Record<string, unknown>[];
 
   meta?: {
     source_documents?: { id: string; name: string; type?: string; confirmed_at: string; document_number?: string }[];

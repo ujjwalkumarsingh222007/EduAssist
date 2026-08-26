@@ -815,6 +815,8 @@ export interface CanonicalProfile {
 
   // Education
   education: CanonicalEducationComponents;
+  class10?: Record<string, unknown>;
+  class12?: Record<string, unknown>;
 
   // Financial
   annual_income: string;

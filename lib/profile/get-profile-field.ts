@@ -362,13 +362,58 @@ export function getProfileFieldWithSource(
 
     case "class_10_roll_number":
     case "10th_roll_number":
-      val = marksheet10?.roll_number || fromConfirmed("class_10_roll_number").val || "";
+    case "class10_roll_number":
+    case "class10.roll_number":
+      val = marksheet10?.roll_number || fromConfirmed("class_10_roll_number").val || fromConfirmed("secondary_10th_roll").val || "";
       sourceDoc = marksheet10?.source_document_name;
+      break;
+
+    case "class_10_registration_number":
+    case "10th_registration_number":
+    case "class10_registration_number":
+    case "class10.registration_number":
+    case "class_10_reg_no":
+    case "10th_reg_no":
+      val = marksheet10?.registration_number || fromConfirmed("secondary_10th_registration_number").val || fromConfirmed("class_10_registration_number").val || "";
+      sourceDoc = marksheet10?.source_document_name;
+      break;
+
+    case "class_10_enrollment_number":
+    case "10th_enrollment_number":
+    case "class10_enrollment_number":
+    case "class10.enrollment_number":
+      val = marksheet10?.enrollment_number || fromConfirmed("secondary_10th_enrollment_number").val || "";
+      break;
+
+    case "class_10_obtained_marks":
+    case "10th_obtained_marks":
+    case "class10_obtained_marks":
+    case "class10.obtained_marks":
+      val = String(marksheet10?.obtained_marks || fromConfirmed("secondary_10th_obtained_marks").val || "");
+      break;
+
+    case "class_10_total_marks":
+    case "10th_total_marks":
+    case "class10_total_marks":
+    case "class10.total_marks":
+      val = String(marksheet10?.total_marks || fromConfirmed("secondary_10th_total_marks").val || "");
+      break;
+
+    case "class_10_division":
+    case "10th_division":
+      val = marksheet10?.division || fromConfirmed("secondary_10th_division").val || "";
+      break;
+
+    case "class_10_grade":
+    case "10th_grade":
+      val = marksheet10?.grade || fromConfirmed("secondary_10th_grade").val || "";
       break;
 
     case "class_10_school":
     case "10th_school":
-      val = marksheet10?.school_name || marksheet10?.institution_name || fromConfirmed("class_10_school").val || "";
+    case "class10_school":
+    case "class10.school_name":
+      val = marksheet10?.school_name || marksheet10?.institution_name || fromConfirmed("class_10_school").val || fromConfirmed("secondary_10th_school").val || "";
       break;
 
     // ==========================================
@@ -378,54 +423,102 @@ export function getProfileFieldWithSource(
     case "12th_percentage":
     case "hsc_percentage":
     case "intermediate_percentage":
+    case "class12_percentage":
+    case "class12.percentage":
       if (marksheet12?.percentage) {
         val = String(marksheet12.percentage);
         if (!val.endsWith("%")) val = `${val}%`;
         sourceDoc = marksheet12.source_document_name || "Class 12 Marksheet";
       } else {
-        val = fromConfirmed("class_12_percentage").val || "";
+        val = fromConfirmed("class_12_percentage").val || fromConfirmed("senior_secondary_12th_percentage").val || "";
         sourceDoc = fromConfirmed("class_12_percentage").doc;
       }
       break;
 
     case "class_12_marks":
     case "12th_marks":
+    case "class12_total_marks":
+    case "class12.total_marks":
       if (marksheet12?.total_marks) {
         val = String(marksheet12.total_marks);
         sourceDoc = marksheet12.source_document_name || "Class 12 Marksheet";
       } else {
-        val = fromConfirmed("class_12_marks").val || "";
+        val = fromConfirmed("class_12_marks").val || fromConfirmed("senior_secondary_12th_total_marks").val || "";
       }
+      break;
+
+    case "class_12_obtained_marks":
+    case "12th_obtained_marks":
+    case "class12_obtained_marks":
+    case "class12.obtained_marks":
+      val = String(marksheet12?.obtained_marks || fromConfirmed("senior_secondary_12th_obtained_marks").val || "");
       break;
 
     case "class_12_passing_year":
     case "12th_passing_year":
     case "12th_year":
-      val = marksheet12?.year || marksheet12?.passing_year || fromConfirmed("class_12_passing_year").val || "";
+    case "class12_passing_year":
+    case "class12.passing_year":
+      val = marksheet12?.year || marksheet12?.passing_year || fromConfirmed("class_12_passing_year").val || fromConfirmed("senior_secondary_12th_year").val || "";
       sourceDoc = marksheet12?.source_document_name || fromConfirmed("class_12_passing_year").doc;
       break;
 
     case "class_12_board":
     case "12th_board":
-      val = marksheet12?.board_name || fromConfirmed("class_12_board").val || "";
+    case "class12_board":
+    case "class12.board":
+      val = marksheet12?.board_name || fromConfirmed("class_12_board").val || fromConfirmed("senior_secondary_12th_board").val || "";
       sourceDoc = marksheet12?.source_document_name || fromConfirmed("class_12_board").doc;
       break;
 
     case "class_12_stream":
     case "12th_stream":
-      val = marksheet12?.stream || fromConfirmed("class_12_stream").val || "";
+    case "class12_stream":
+    case "class12.stream":
+      val = marksheet12?.stream || fromConfirmed("class_12_stream").val || fromConfirmed("senior_secondary_12th_stream").val || "";
       sourceDoc = marksheet12?.source_document_name || fromConfirmed("class_12_stream").doc;
       break;
 
     case "class_12_roll_number":
     case "12th_roll_number":
-      val = marksheet12?.roll_number || fromConfirmed("class_12_roll_number").val || "";
+    case "class12_roll_number":
+    case "class12.roll_number":
+      val = marksheet12?.roll_number || fromConfirmed("class_12_roll_number").val || fromConfirmed("senior_secondary_12th_roll").val || "";
       sourceDoc = marksheet12?.source_document_name;
+      break;
+
+    case "class_12_registration_number":
+    case "12th_registration_number":
+    case "class12_registration_number":
+    case "class12.registration_number":
+    case "class_12_reg_no":
+    case "12th_reg_no":
+      val = marksheet12?.registration_number || fromConfirmed("senior_secondary_12th_registration_number").val || fromConfirmed("class_12_registration_number").val || "";
+      sourceDoc = marksheet12?.source_document_name;
+      break;
+
+    case "class_12_enrollment_number":
+    case "12th_enrollment_number":
+    case "class12_enrollment_number":
+    case "class12.enrollment_number":
+      val = marksheet12?.enrollment_number || fromConfirmed("senior_secondary_12th_enrollment_number").val || "";
+      break;
+
+    case "class_12_division":
+    case "12th_division":
+      val = marksheet12?.division || fromConfirmed("senior_secondary_12th_division").val || "";
+      break;
+
+    case "class_12_grade":
+    case "12th_grade":
+      val = marksheet12?.grade || fromConfirmed("senior_secondary_12th_grade").val || "";
       break;
 
     case "class_12_school":
     case "12th_school":
-      val = marksheet12?.school_name || marksheet12?.institution_name || fromConfirmed("class_12_school").val || "";
+    case "class12_school":
+    case "class12.school_name":
+      val = marksheet12?.school_name || marksheet12?.institution_name || fromConfirmed("class_12_school").val || fromConfirmed("senior_secondary_12th_school").val || "";
       break;
 
     // ==========================================

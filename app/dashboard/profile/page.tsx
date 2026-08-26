@@ -140,20 +140,42 @@ export default function UniversalProfilePage() {
   const [edit10th, setEdit10th] = useState({
     board_name: "",
     school_name: "",
+    school_code: "",
+    center_number: "",
     roll_number: "",
+    registration_number: "",
+    enrollment_number: "",
+    certificate_number: "",
     passing_year: "",
+    examination_year: "",
     percentage: "",
+    cgpa: "",
     total_marks: "",
+    obtained_marks: "",
+    result: "PASS",
+    division: "",
+    grade: "",
   });
 
   const [edit12th, setEdit12th] = useState({
     board_name: "",
     school_name: "",
+    school_code: "",
+    center_number: "",
     stream: "Science (PCM)",
     roll_number: "",
+    registration_number: "",
+    enrollment_number: "",
+    certificate_number: "",
     passing_year: "",
+    examination_year: "",
     percentage: "",
+    cgpa: "",
     total_marks: "",
+    obtained_marks: "",
+    result: "PASS",
+    division: "",
+    grade: "",
   });
 
   const [editHigherEd, setEditHigherEd] = useState({
@@ -178,6 +200,7 @@ export default function UniversalProfilePage() {
   const [newSkillProficiency, setNewSkillProficiency] = useState<"Beginner" | "Intermediate" | "Advanced" | "Expert">("Intermediate");
 
   const [editProjectsList, setEditProjectsList] = useState<ProjectRecord[]>([]);
+  const [userDocuments, setUserDocuments] = useState<any[]>([]);
 
   useEffect(() => {
     loadProfile();
@@ -203,6 +226,7 @@ export default function UniversalProfilePage() {
       setUserId(user.id);
       setUserEmail(user.email || "");
 
+      // 1. Fetch User Profile
       const { data: profileRow, error: profError } = await supabase
         .from("profiles")
         .select("*")
@@ -212,6 +236,15 @@ export default function UniversalProfilePage() {
       if (profError) {
         console.warn("[Profile Load] Notice:", profError.message);
       }
+
+      // 2. Fetch User Verified Documents dynamically
+      const { data: docRows } = await supabase
+        .from("documents")
+        .select("id, file_name, document_type, extraction_status, created_at, extracted_data")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      setUserDocuments(docRows || []);
 
       if (profileRow) {
         const fullProf = profileRow as Profile;
@@ -231,14 +264,8 @@ export default function UniversalProfilePage() {
               nationality: "Indian",
               country: "India",
             },
-            education: {
-              degree: "Bachelor of Technology (B.Tech)",
-              branch: "Computer Science and Engineering",
-            },
-            eligibility: {
-              category: "General",
-              domicile: "Delhi",
-            },
+            education: {},
+            eligibility: {},
           },
         };
         setProfile(initialProf);
@@ -287,65 +314,64 @@ export default function UniversalProfilePage() {
     });
 
     setEdit10th({
-      board_name: data.secondary_10th?.board_name || "CBSE",
+      board_name: data.secondary_10th?.board_name || "",
       school_name: data.secondary_10th?.school_name || data.secondary_10th?.institution_name || "",
+      school_code: data.secondary_10th?.school_code || "",
+      center_number: data.secondary_10th?.center_number || "",
       roll_number: data.secondary_10th?.roll_number || "",
-      passing_year: String(data.secondary_10th?.passing_year || data.secondary_10th?.year || "2022"),
-      percentage: String(data.secondary_10th?.percentage || "92.4%"),
-      total_marks: String(data.secondary_10th?.total_marks || "462 / 500"),
+      registration_number: data.secondary_10th?.registration_number || "",
+      enrollment_number: data.secondary_10th?.enrollment_number || "",
+      certificate_number: data.secondary_10th?.certificate_number || "",
+      passing_year: String(data.secondary_10th?.passing_year || data.secondary_10th?.year || ""),
+      examination_year: String(data.secondary_10th?.examination_year || ""),
+      percentage: String(data.secondary_10th?.percentage || ""),
+      cgpa: String(data.secondary_10th?.cgpa || ""),
+      total_marks: String(data.secondary_10th?.total_marks || ""),
+      obtained_marks: String(data.secondary_10th?.obtained_marks || ""),
+      result: data.secondary_10th?.result || "PASS",
+      division: data.secondary_10th?.division || "",
+      grade: data.secondary_10th?.grade || "",
     });
 
     setEdit12th({
-      board_name: data.senior_secondary_12th?.board_name || "CBSE",
+      board_name: data.senior_secondary_12th?.board_name || "",
       school_name: data.senior_secondary_12th?.school_name || data.senior_secondary_12th?.institution_name || "",
-      stream: (data.senior_secondary_12th?.stream as string) || "Science (PCM)",
+      school_code: data.senior_secondary_12th?.school_code || "",
+      center_number: data.senior_secondary_12th?.center_number || "",
+      stream: (data.senior_secondary_12th?.stream as string) || "",
       roll_number: data.senior_secondary_12th?.roll_number || "",
-      passing_year: String(data.senior_secondary_12th?.passing_year || data.senior_secondary_12th?.year || "2024"),
-      percentage: String(data.senior_secondary_12th?.percentage || "94.6%"),
-      total_marks: String(data.senior_secondary_12th?.total_marks || "473 / 500"),
+      registration_number: data.senior_secondary_12th?.registration_number || "",
+      enrollment_number: data.senior_secondary_12th?.enrollment_number || "",
+      certificate_number: data.senior_secondary_12th?.certificate_number || "",
+      passing_year: String(data.senior_secondary_12th?.passing_year || data.senior_secondary_12th?.year || ""),
+      examination_year: String(data.senior_secondary_12th?.examination_year || ""),
+      percentage: String(data.senior_secondary_12th?.percentage || ""),
+      cgpa: String(data.senior_secondary_12th?.cgpa || ""),
+      total_marks: String(data.senior_secondary_12th?.total_marks || ""),
+      obtained_marks: String(data.senior_secondary_12th?.obtained_marks || ""),
+      result: data.senior_secondary_12th?.result || "PASS",
+      division: data.senior_secondary_12th?.division || "",
+      grade: data.senior_secondary_12th?.grade || "",
     });
 
     setEditHigherEd({
-      university_name: (data.education?.university_name as string) || "Delhi Technological University",
-      degree: (data.education?.degree as string) || "Bachelor of Technology (B.Tech)",
-      branch: (data.education?.branch as string) || "Computer Science and Engineering",
-      current_semester: String(data.education?.current_semester || "5"),
-      cgpa: String(data.education?.cgpa || "8.8"),
-      graduation_year: String(data.education?.graduation_year || data.education?.expected_graduation_year || "2026"),
+      university_name: (data.education?.university_name as string) || "",
+      degree: (data.education?.degree as string) || "",
+      branch: (data.education?.branch as string) || "",
+      current_semester: String(data.education?.current_semester || "1"),
+      cgpa: String(data.education?.cgpa || ""),
+      graduation_year: String(data.education?.graduation_year || data.education?.expected_graduation_year || ""),
     });
 
     setEditFinancial({
-      annual_income: (data.eligibility?.annual_income as string) || "250000",
+      annual_income: (data.eligibility?.annual_income as string) || "",
       category: (data.eligibility?.category as string) || "General",
-      domicile: (data.eligibility?.domicile as string) || prof.state || "Delhi",
+      domicile: (data.eligibility?.domicile as string) || prof.state || "",
       pwd_status: (data.eligibility?.pwd_status as string) || "No",
     });
 
-    setEditSkillsList(
-      data.skills && data.skills.length > 0
-        ? data.skills
-        : [
-            { skill_name: "Python", proficiency: "Advanced", verified: true },
-            { skill_name: "Data Structures & Algorithms", proficiency: "Advanced", verified: true },
-            { skill_name: "React.js & Next.js", proficiency: "Intermediate", verified: true },
-            { skill_name: "TypeScript", proficiency: "Intermediate", verified: true },
-            { skill_name: "SQL & PostgreSQL", proficiency: "Intermediate", verified: true },
-            { skill_name: "Git & GitHub", proficiency: "Advanced", verified: true },
-          ]
-    );
-
-    setEditProjectsList(
-      data.projects && data.projects.length > 0
-        ? data.projects
-        : [
-            {
-              project_name: "Smart Education Assistant (SEA)",
-              description: "Autonomous opportunity discovery, multi-factor eligibility verification, and privacy-preserving Chrome extension autofill system.",
-              technologies: ["Next.js", "TypeScript", "Supabase", "Gemini AI"],
-              project_type: "Full-Stack AI Application",
-            },
-          ]
-    );
+    setEditSkillsList(data.skills || []);
+    setEditProjectsList(data.projects || []);
   }
 
   function startEditSection(sectionKey: string) {
@@ -445,10 +471,21 @@ export default function UniversalProfilePage() {
           ...(currentPData.secondary_10th || {}),
           board_name: edit10th.board_name.trim(),
           school_name: edit10th.school_name.trim(),
+          school_code: edit10th.school_code.trim(),
+          center_number: edit10th.center_number.trim(),
           roll_number: edit10th.roll_number.trim(),
+          registration_number: edit10th.registration_number.trim(),
+          enrollment_number: edit10th.enrollment_number.trim(),
+          certificate_number: edit10th.certificate_number.trim(),
           passing_year: edit10th.passing_year.trim(),
+          examination_year: edit10th.examination_year.trim(),
           percentage: edit10th.percentage.trim(),
+          cgpa: edit10th.cgpa.trim(),
           total_marks: edit10th.total_marks.trim(),
+          obtained_marks: edit10th.obtained_marks.trim(),
+          result: edit10th.result.trim(),
+          division: edit10th.division.trim(),
+          grade: edit10th.grade.trim(),
           source_document_name: currentPData.secondary_10th?.source_document_name || "Class 10 Marksheet",
         };
       } else if (sectionKey === "senior_secondary_12th") {
@@ -456,11 +493,22 @@ export default function UniversalProfilePage() {
           ...(currentPData.senior_secondary_12th || {}),
           board_name: edit12th.board_name.trim(),
           school_name: edit12th.school_name.trim(),
+          school_code: edit12th.school_code.trim(),
+          center_number: edit12th.center_number.trim(),
           stream: edit12th.stream,
           roll_number: edit12th.roll_number.trim(),
+          registration_number: edit12th.registration_number.trim(),
+          enrollment_number: edit12th.enrollment_number.trim(),
+          certificate_number: edit12th.certificate_number.trim(),
           passing_year: edit12th.passing_year.trim(),
+          examination_year: edit12th.examination_year.trim(),
           percentage: edit12th.percentage.trim(),
+          cgpa: edit12th.cgpa.trim(),
           total_marks: edit12th.total_marks.trim(),
+          obtained_marks: edit12th.obtained_marks.trim(),
+          result: edit12th.result.trim(),
+          division: edit12th.division.trim(),
+          grade: edit12th.grade.trim(),
           source_document_name: currentPData.senior_secondary_12th?.source_document_name || "Class 12 Marksheet",
         };
       } else if (sectionKey === "higher_education") {
@@ -615,7 +663,7 @@ export default function UniversalProfilePage() {
       (pData.academic_results?.length || 0) * 4 +
       (pData.certificates?.length || 0) * 2;
 
-    const totalDocs = (pData.meta?.source_documents?.length || 0) + (pData.certificates?.length || 0);
+    const totalDocs = userDocuments.length || (pData.meta?.source_documents?.length || 0) + (pData.certificates?.length || 0);
 
     return {
       basicPct,
@@ -623,10 +671,10 @@ export default function UniversalProfilePage() {
       familyPct,
       careerPct,
       overallPct,
-      verifiedCount: Math.max(verifiedCount, 12),
-      totalDocs: Math.max(totalDocs, 3),
+      verifiedCount,
+      totalDocs,
     };
-  }, [profile, pData, userEmail]);
+  }, [profile, pData, userEmail, userDocuments]);
 
   function exportProfileData() {
     const exportable = {
@@ -984,16 +1032,22 @@ export default function UniversalProfilePage() {
                 <label className="text-[11px] font-bold text-slate-500 block mb-1">Aadhaar Number</label>
                 <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
                   <span className="font-mono font-semibold text-slate-900">
-                    {showSensitive.aadhaar
-                      ? pData.identity?.aadhaar_number || pData.confirmed_fields?.aadhaar_number?.value || "XXXX-XXXX-8912"
-                      : maskSensitiveValue("aadhaar_number", pData.identity?.aadhaar_number || "987654321098")}
+                    {pData.identity?.aadhaar_number || pData.confirmed_fields?.aadhaar_number?.value ? (
+                      showSensitive.aadhaar
+                        ? pData.identity?.aadhaar_number || pData.confirmed_fields?.aadhaar_number?.value
+                        : maskSensitiveValue("aadhaar_number", pData.identity?.aadhaar_number || pData.confirmed_fields?.aadhaar_number?.value || "")
+                    ) : (
+                      <span className="text-slate-400 font-sans italic font-normal">Not Provided</span>
+                    )}
                   </span>
-                  <button
-                    onClick={() => toggleSensitive("aadhaar")}
-                    className="text-slate-400 hover:text-slate-600"
-                  >
-                    {showSensitive.aadhaar ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                  </button>
+                  {(pData.identity?.aadhaar_number || pData.confirmed_fields?.aadhaar_number?.value) && (
+                    <button
+                      onClick={() => toggleSensitive("aadhaar")}
+                      className="text-slate-400 hover:text-slate-600"
+                    >
+                      {showSensitive.aadhaar ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -1001,16 +1055,22 @@ export default function UniversalProfilePage() {
                 <label className="text-[11px] font-bold text-slate-500 block mb-1">PAN Card Number</label>
                 <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
                   <span className="font-mono font-semibold text-slate-900">
-                    {showSensitive.pan
-                      ? pData.identity?.pan_number || "ABCDE1234F"
-                      : maskSensitiveValue("pan_number", pData.identity?.pan_number || "ABCDE1234F")}
+                    {pData.identity?.pan_number || pData.confirmed_fields?.pan_number?.value ? (
+                      showSensitive.pan
+                        ? pData.identity?.pan_number || pData.confirmed_fields?.pan_number?.value
+                        : maskSensitiveValue("pan_number", pData.identity?.pan_number || pData.confirmed_fields?.pan_number?.value || "")
+                    ) : (
+                      <span className="text-slate-400 font-sans italic font-normal">Not Provided</span>
+                    )}
                   </span>
-                  <button
-                    onClick={() => toggleSensitive("pan")}
-                    className="text-slate-400 hover:text-slate-600"
-                  >
-                    {showSensitive.pan ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                  </button>
+                  {(pData.identity?.pan_number || pData.confirmed_fields?.pan_number?.value) && (
+                    <button
+                      onClick={() => toggleSensitive("pan")}
+                      className="text-slate-400 hover:text-slate-600"
+                    >
+                      {showSensitive.pan ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -1037,9 +1097,11 @@ export default function UniversalProfilePage() {
             >
               <MapPin className="w-4 h-4 text-emerald-600" />
               <h3 className="text-sm font-bold text-slate-900">Address & Domicile</h3>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                ✓ Verified
-              </span>
+              {(profile?.address || profile?.city || profile?.state) && (
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  ✓ Verified
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-2">
               {activeEditSection === "address" ? (
@@ -1113,21 +1175,27 @@ export default function UniversalProfilePage() {
                   <div className="sm:col-span-2">
                     <label className="text-[11px] font-bold text-slate-500 block mb-1">Permanent Residential Address</label>
                     <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
-                      {profile?.address || pData.personal?.address_line1 || "Flat 402, Green Park Avenue"}
+                      {profile?.address || pData.personal?.address_line1 || (
+                        <span className="text-slate-400 font-normal italic">Not Provided</span>
+                      )}
                     </div>
                   </div>
 
                   <div>
                     <label className="text-[11px] font-bold text-slate-500 block mb-1">City / District</label>
                     <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
-                      {profile?.city || "New Delhi"}
+                      {profile?.city || (
+                        <span className="text-slate-400 font-normal italic">Not Provided</span>
+                      )}
                     </div>
                   </div>
 
                   <div>
                     <label className="text-[11px] font-bold text-slate-500 block mb-1">State of Domicile</label>
                     <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
-                      {profile?.state || pData.eligibility?.domicile || "Delhi"}
+                      {profile?.state || pData.eligibility?.domicile || (
+                        <span className="text-slate-400 font-normal italic">Not Provided</span>
+                      )}
                     </div>
                   </div>
                 </>
@@ -1225,21 +1293,27 @@ export default function UniversalProfilePage() {
                   <div>
                     <label className="text-[11px] font-bold text-slate-500 block mb-1">Father's Full Name</label>
                     <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
-                      {pData.family?.father_name || "Rajesh Sharma"}
+                      {pData.family?.father_name || (
+                        <span className="text-slate-400 font-normal italic">Not Provided</span>
+                      )}
                     </div>
                   </div>
 
                   <div>
                     <label className="text-[11px] font-bold text-slate-500 block mb-1">Father's Occupation</label>
                     <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
-                      {pData.family?.father_occupation || "Government Service / Teacher"}
+                      {pData.family?.father_occupation || (
+                        <span className="text-slate-400 font-normal italic">Not Provided</span>
+                      )}
                     </div>
                   </div>
 
                   <div>
                     <label className="text-[11px] font-bold text-slate-500 block mb-1">Mother's Full Name</label>
                     <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
-                      {pData.family?.mother_name || "Sunita Sharma"}
+                      {pData.family?.mother_name || (
+                        <span className="text-slate-400 font-normal italic">Not Provided</span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1261,9 +1335,11 @@ export default function UniversalProfilePage() {
             >
               <BookOpen className="w-4 h-4 text-blue-600" />
               <h3 className="text-sm font-bold text-slate-900">Class 10 / Secondary Education</h3>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                ✓ From verified Class 10 Marksheet
-              </span>
+              {pData.secondary_10th?.board_name && (
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  ✓ {pData.secondary_10th?.source_document_name ? `From verified ${pData.secondary_10th.source_document_name}` : "Verified"}
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-2">
               {activeEditSection === "secondary_10th" ? (
@@ -1299,72 +1375,264 @@ export default function UniversalProfilePage() {
           </div>
 
           {openSections.secondary_10th && (
-            <div className="p-6 space-y-4 text-xs">
+            <div className="p-6 space-y-5 text-xs">
               {activeEditSection === "secondary_10th" ? (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">Board Name</label>
-                    <input
-                      type="text"
-                      value={edit10th.board_name}
-                      onChange={(e) => setEdit10th({ ...edit10th, board_name: e.target.value })}
-                      className="w-full p-2 border border-slate-300 rounded-xl outline-none"
-                    />
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">School / Institution Name</label>
+                      <input
+                        type="text"
+                        value={edit10th.school_name}
+                        onChange={(e) => setEdit10th({ ...edit10th, school_name: e.target.value })}
+                        className="w-full p-2 border border-slate-300 rounded-xl outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">Board Name</label>
+                      <input
+                        type="text"
+                        value={edit10th.board_name}
+                        onChange={(e) => setEdit10th({ ...edit10th, board_name: e.target.value })}
+                        className="w-full p-2 border border-slate-300 rounded-xl outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">School Code / Center No</label>
+                      <input
+                        type="text"
+                        value={edit10th.school_code}
+                        onChange={(e) => setEdit10th({ ...edit10th, school_code: e.target.value })}
+                        className="w-full p-2 border border-slate-300 rounded-xl outline-none"
+                        placeholder="e.g. 08234"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">Passing Year</label>
-                    <input
-                      type="text"
-                      value={edit10th.passing_year}
-                      onChange={(e) => setEdit10th({ ...edit10th, passing_year: e.target.value })}
-                      className="w-full p-2 border border-slate-300 rounded-xl outline-none"
-                    />
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">Roll Number</label>
+                      <input
+                        type="text"
+                        value={edit10th.roll_number}
+                        onChange={(e) => setEdit10th({ ...edit10th, roll_number: e.target.value })}
+                        className="w-full p-2 border border-slate-300 rounded-xl outline-none font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">Registration / Enrolment No</label>
+                      <input
+                        type="text"
+                        value={edit10th.registration_number}
+                        onChange={(e) => setEdit10th({ ...edit10th, registration_number: e.target.value })}
+                        className="w-full p-2 border border-slate-300 rounded-xl outline-none font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">Passing Year</label>
+                      <input
+                        type="text"
+                        value={edit10th.passing_year}
+                        onChange={(e) => setEdit10th({ ...edit10th, passing_year: e.target.value })}
+                        className="w-full p-2 border border-slate-300 rounded-xl outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">Result Status</label>
+                      <input
+                        type="text"
+                        value={edit10th.result}
+                        onChange={(e) => setEdit10th({ ...edit10th, result: e.target.value })}
+                        className="w-full p-2 border border-slate-300 rounded-xl outline-none font-semibold text-emerald-700"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">Roll Number</label>
-                    <input
-                      type="text"
-                      value={edit10th.roll_number}
-                      onChange={(e) => setEdit10th({ ...edit10th, roll_number: e.target.value })}
-                      className="w-full p-2 border border-slate-300 rounded-xl outline-none font-mono"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">Percentage Score</label>
-                    <input
-                      type="text"
-                      value={edit10th.percentage}
-                      onChange={(e) => setEdit10th({ ...edit10th, percentage: e.target.value })}
-                      className="w-full p-2 border border-slate-300 rounded-xl outline-none font-bold text-emerald-800"
-                    />
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">Total Marks Obtained</label>
+                      <input
+                        type="text"
+                        value={edit10th.obtained_marks}
+                        onChange={(e) => setEdit10th({ ...edit10th, obtained_marks: e.target.value })}
+                        className="w-full p-2 border border-slate-300 rounded-xl outline-none"
+                        placeholder="e.g. 457"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">Maximum Possible Marks</label>
+                      <input
+                        type="text"
+                        value={edit10th.total_marks}
+                        onChange={(e) => setEdit10th({ ...edit10th, total_marks: e.target.value })}
+                        className="w-full p-2 border border-slate-300 rounded-xl outline-none"
+                        placeholder="e.g. 500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">Percentage Score</label>
+                      <input
+                        type="text"
+                        value={edit10th.percentage}
+                        onChange={(e) => setEdit10th({ ...edit10th, percentage: e.target.value })}
+                        className="w-full p-2 border border-slate-300 rounded-xl outline-none font-bold text-emerald-800"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">CGPA / Grade</label>
+                      <input
+                        type="text"
+                        value={edit10th.cgpa || edit10th.grade}
+                        onChange={(e) => setEdit10th({ ...edit10th, cgpa: e.target.value, grade: e.target.value })}
+                        className="w-full p-2 border border-slate-300 rounded-xl outline-none"
+                      />
+                    </div>
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div>
-                    <span className="text-[11px] font-bold text-slate-500 block mb-1">Board</span>
-                    <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
-                      {pData.secondary_10th?.board_name || "CBSE"}
-                    </p>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="sm:col-span-2">
+                      <span className="text-[11px] font-bold text-slate-500 block mb-1">School / Institution</span>
+                      <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
+                        {pData.secondary_10th?.school_name || pData.secondary_10th?.institution_name || (
+                          <span className="text-slate-400 font-normal italic">Not Provided</span>
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-500 block mb-1">Board</span>
+                      <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
+                        {pData.secondary_10th?.board_name || (
+                          <span className="text-slate-400 font-normal italic">Not Provided</span>
+                        )}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-[11px] font-bold text-slate-500 block mb-1">Passing Year</span>
-                    <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
-                      {pData.secondary_10th?.passing_year || "2022"}
-                    </p>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-500 block mb-1">Roll Number</span>
+                      <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-mono font-semibold text-slate-900">
+                        {pData.secondary_10th?.roll_number || (
+                          <span className="text-slate-400 font-normal italic font-sans">Not Provided</span>
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-500 block mb-1">Registration / Enrolment No</span>
+                      <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-mono font-semibold text-slate-900">
+                        {pData.secondary_10th?.registration_number || pData.secondary_10th?.enrollment_number || (
+                          <span className="text-slate-400 font-normal italic font-sans">—</span>
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-500 block mb-1">Passing Year</span>
+                      <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
+                        {pData.secondary_10th?.passing_year || (
+                          <span className="text-slate-400 font-normal italic">Not Provided</span>
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-500 block mb-1">Result Status</span>
+                      <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-emerald-800">
+                        {pData.secondary_10th?.result || "PASS"} {pData.secondary_10th?.division ? `(${pData.secondary_10th.division})` : ""}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-[11px] font-bold text-slate-500 block mb-1">Roll Number</span>
-                    <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-mono font-semibold text-slate-900">
-                      {pData.secondary_10th?.roll_number || "12459021"}
-                    </p>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-500 block mb-1">Marks Obtained</span>
+                      <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
+                        {pData.secondary_10th?.obtained_marks ? (
+                          <span>{pData.secondary_10th.obtained_marks}</span>
+                        ) : (
+                          <span className="text-slate-400 font-normal italic">—</span>
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-500 block mb-1">Max Marks</span>
+                      <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
+                        {pData.secondary_10th?.total_marks ? (
+                          <span>{pData.secondary_10th.total_marks}</span>
+                        ) : (
+                          <span className="text-slate-400 font-normal italic">—</span>
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-500 block mb-1">Percentage Score</span>
+                      <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
+                        {pData.secondary_10th?.percentage ? (
+                          <span className="font-bold text-emerald-800">{pData.secondary_10th.percentage}</span>
+                        ) : (
+                          <span className="text-slate-400 font-normal italic">Not Provided</span>
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-500 block mb-1">CGPA / Grade</span>
+                      <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
+                        {pData.secondary_10th?.cgpa || pData.secondary_10th?.grade || (
+                          <span className="text-slate-400 font-normal italic">—</span>
+                        )}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-[11px] font-bold text-slate-500 block mb-1">Aggregate Score</span>
-                    <p className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200 font-bold text-emerald-800">
-                      {pData.secondary_10th?.percentage || "92.4%"}
-                    </p>
-                  </div>
+
+                  {/* Subjects Breakdown Table */}
+                  {Array.isArray(pData.secondary_10th?.subjects) && pData.secondary_10th.subjects.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-slate-200">
+                      <h4 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2">Subject Breakdown</h4>
+                      <div className="overflow-x-auto rounded-xl border border-slate-200">
+                        <table className="w-full text-left text-xs border-collapse">
+                          <thead className="bg-slate-100/75 border-b border-slate-200 text-slate-600 font-semibold">
+                            <tr>
+                              <th className="py-2 px-3">Subject Code</th>
+                              <th className="py-2 px-3">Subject Name</th>
+                              <th className="py-2 px-3 text-right">Marks Obtained</th>
+                              <th className="py-2 px-3 text-right">Max Marks</th>
+                              <th className="py-2 px-3 text-center">Grade</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 bg-white">
+                            {pData.secondary_10th.subjects.map((sub, idx) => (
+                              <tr key={idx} className="hover:bg-slate-50/50">
+                                <td className="py-2 px-3 font-mono text-slate-500">{sub.subject_code || "—"}</td>
+                                <td className="py-2 px-3 font-medium text-slate-800">{sub.subject_name}</td>
+                                <td className="py-2 px-3 text-right font-semibold text-slate-900">{sub.marks_obtained ?? "—"}</td>
+                                <td className="py-2 px-3 text-right text-slate-500">{sub.maximum_marks ?? "—"}</td>
+                                <td className="py-2 px-3 text-center">
+                                  {sub.grade ? (
+                                    <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-bold text-[10px] border border-blue-200">
+                                      {sub.grade}
+                                    </span>
+                                  ) : (
+                                    <span className="text-slate-400">—</span>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Dynamic Custom Fields */}
+                  {pData.secondary_10th?.custom_fields && Object.keys(pData.secondary_10th.custom_fields).length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap gap-2">
+                      {Object.values(pData.secondary_10th.custom_fields).map((cf) => (
+                        <div key={cf.key} className="px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-[11px] text-slate-700">
+                          <span className="font-semibold text-slate-500">{cf.label}:</span> <span className="font-bold text-slate-900">{String(cf.value)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1384,9 +1652,11 @@ export default function UniversalProfilePage() {
             >
               <GraduationCap className="w-4 h-4 text-purple-600" />
               <h3 className="text-sm font-bold text-slate-900">Class 12 / Senior Secondary Education</h3>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                ✓ From verified Class 12 Marksheet
-              </span>
+              {pData.senior_secondary_12th?.board_name && (
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  ✓ {pData.senior_secondary_12th?.source_document_name ? `From verified ${pData.senior_secondary_12th.source_document_name}` : "Verified"}
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-2">
               {activeEditSection === "senior_secondary_12th" ? (
@@ -1422,72 +1692,272 @@ export default function UniversalProfilePage() {
           </div>
 
           {openSections.senior_secondary_12th && (
-            <div className="p-6 space-y-4 text-xs">
+            <div className="p-6 space-y-5 text-xs">
               {activeEditSection === "senior_secondary_12th" ? (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">Board</label>
-                    <input
-                      type="text"
-                      value={edit12th.board_name}
-                      onChange={(e) => setEdit12th({ ...edit12th, board_name: e.target.value })}
-                      className="w-full p-2 border border-slate-300 rounded-xl outline-none"
-                    />
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <div className="sm:col-span-2">
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">School / Junior College Name</label>
+                      <input
+                        type="text"
+                        value={edit12th.school_name}
+                        onChange={(e) => setEdit12th({ ...edit12th, school_name: e.target.value })}
+                        className="w-full p-2 border border-slate-300 rounded-xl outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">Board</label>
+                      <input
+                        type="text"
+                        value={edit12th.board_name}
+                        onChange={(e) => setEdit12th({ ...edit12th, board_name: e.target.value })}
+                        className="w-full p-2 border border-slate-300 rounded-xl outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">Stream</label>
+                      <input
+                        type="text"
+                        value={edit12th.stream}
+                        onChange={(e) => setEdit12th({ ...edit12th, stream: e.target.value })}
+                        className="w-full p-2 border border-slate-300 rounded-xl outline-none"
+                        placeholder="Science (PCM) / Commerce"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">Stream</label>
-                    <input
-                      type="text"
-                      value={edit12th.stream}
-                      onChange={(e) => setEdit12th({ ...edit12th, stream: e.target.value })}
-                      className="w-full p-2 border border-slate-300 rounded-xl outline-none"
-                    />
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">Roll Number</label>
+                      <input
+                        type="text"
+                        value={edit12th.roll_number}
+                        onChange={(e) => setEdit12th({ ...edit12th, roll_number: e.target.value })}
+                        className="w-full p-2 border border-slate-300 rounded-xl outline-none font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">Registration / Enrolment No</label>
+                      <input
+                        type="text"
+                        value={edit12th.registration_number}
+                        onChange={(e) => setEdit12th({ ...edit12th, registration_number: e.target.value })}
+                        className="w-full p-2 border border-slate-300 rounded-xl outline-none font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">Passing Year</label>
+                      <input
+                        type="text"
+                        value={edit12th.passing_year}
+                        onChange={(e) => setEdit12th({ ...edit12th, passing_year: e.target.value })}
+                        className="w-full p-2 border border-slate-300 rounded-xl outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">Result Status</label>
+                      <input
+                        type="text"
+                        value={edit12th.result}
+                        onChange={(e) => setEdit12th({ ...edit12th, result: e.target.value })}
+                        className="w-full p-2 border border-slate-300 rounded-xl outline-none font-semibold text-emerald-700"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">Passing Year</label>
-                    <input
-                      type="text"
-                      value={edit12th.passing_year}
-                      onChange={(e) => setEdit12th({ ...edit12th, passing_year: e.target.value })}
-                      className="w-full p-2 border border-slate-300 rounded-xl outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">Percentage</label>
-                    <input
-                      type="text"
-                      value={edit12th.percentage}
-                      onChange={(e) => setEdit12th({ ...edit12th, percentage: e.target.value })}
-                      className="w-full p-2 border border-slate-300 rounded-xl outline-none font-bold text-emerald-800"
-                    />
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">Marks Obtained</label>
+                      <input
+                        type="text"
+                        value={edit12th.obtained_marks}
+                        onChange={(e) => setEdit12th({ ...edit12th, obtained_marks: e.target.value })}
+                        className="w-full p-2 border border-slate-300 rounded-xl outline-none"
+                        placeholder="e.g. 473"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">Maximum Marks</label>
+                      <input
+                        type="text"
+                        value={edit12th.total_marks}
+                        onChange={(e) => setEdit12th({ ...edit12th, total_marks: e.target.value })}
+                        className="w-full p-2 border border-slate-300 rounded-xl outline-none"
+                        placeholder="e.g. 500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">Percentage Score</label>
+                      <input
+                        type="text"
+                        value={edit12th.percentage}
+                        onChange={(e) => setEdit12th({ ...edit12th, percentage: e.target.value })}
+                        className="w-full p-2 border border-slate-300 rounded-xl outline-none font-bold text-emerald-800"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">CGPA / Grade</label>
+                      <input
+                        type="text"
+                        value={edit12th.cgpa || edit12th.grade}
+                        onChange={(e) => setEdit12th({ ...edit12th, cgpa: e.target.value, grade: e.target.value })}
+                        className="w-full p-2 border border-slate-300 rounded-xl outline-none"
+                      />
+                    </div>
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div>
-                    <span className="text-[11px] font-bold text-slate-500 block mb-1">Board</span>
-                    <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
-                      {pData.senior_secondary_12th?.board_name || "CBSE"}
-                    </p>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <div className="sm:col-span-2">
+                      <span className="text-[11px] font-bold text-slate-500 block mb-1">School / Junior College</span>
+                      <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
+                        {pData.senior_secondary_12th?.school_name || pData.senior_secondary_12th?.institution_name || (
+                          <span className="text-slate-400 font-normal italic">Not Provided</span>
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-500 block mb-1">Board</span>
+                      <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
+                        {pData.senior_secondary_12th?.board_name || (
+                          <span className="text-slate-400 font-normal italic">Not Provided</span>
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-500 block mb-1">Stream</span>
+                      <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-purple-900">
+                        {pData.senior_secondary_12th?.stream || (
+                          <span className="text-slate-400 font-normal italic">Not Provided</span>
+                        )}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-[11px] font-bold text-slate-500 block mb-1">Stream</span>
-                    <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
-                      {pData.senior_secondary_12th?.stream || "Science (PCM)"}
-                    </p>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-500 block mb-1">Roll Number</span>
+                      <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-mono font-semibold text-slate-900">
+                        {pData.senior_secondary_12th?.roll_number || (
+                          <span className="text-slate-400 font-normal italic font-sans">Not Provided</span>
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-500 block mb-1">Registration / Enrolment No</span>
+                      <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-mono font-semibold text-slate-900">
+                        {pData.senior_secondary_12th?.registration_number || pData.senior_secondary_12th?.enrollment_number || (
+                          <span className="text-slate-400 font-normal italic font-sans">—</span>
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-500 block mb-1">Passing Year</span>
+                      <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
+                        {pData.senior_secondary_12th?.passing_year || (
+                          <span className="text-slate-400 font-normal italic">Not Provided</span>
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-500 block mb-1">Result Status</span>
+                      <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-emerald-800">
+                        {pData.senior_secondary_12th?.result || "PASS"} {pData.senior_secondary_12th?.division ? `(${pData.senior_secondary_12th.division})` : ""}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-[11px] font-bold text-slate-500 block mb-1">Passing Year</span>
-                    <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
-                      {pData.senior_secondary_12th?.passing_year || "2024"}
-                    </p>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-500 block mb-1">Marks Obtained</span>
+                      <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
+                        {pData.senior_secondary_12th?.obtained_marks ? (
+                          <span>{pData.senior_secondary_12th.obtained_marks}</span>
+                        ) : (
+                          <span className="text-slate-400 font-normal italic">—</span>
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-500 block mb-1">Max Marks</span>
+                      <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
+                        {pData.senior_secondary_12th?.total_marks ? (
+                          <span>{pData.senior_secondary_12th.total_marks}</span>
+                        ) : (
+                          <span className="text-slate-400 font-normal italic">—</span>
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-500 block mb-1">Overall Percentage</span>
+                      <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
+                        {pData.senior_secondary_12th?.percentage ? (
+                          <span className="font-bold text-emerald-800">{pData.senior_secondary_12th.percentage}</span>
+                        ) : (
+                          <span className="text-slate-400 font-normal italic">Not Provided</span>
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-500 block mb-1">CGPA / Grade</span>
+                      <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
+                        {pData.senior_secondary_12th?.cgpa || pData.senior_secondary_12th?.grade || (
+                          <span className="text-slate-400 font-normal italic">—</span>
+                        )}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-[11px] font-bold text-slate-500 block mb-1">Overall Percentage</span>
-                    <p className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200 font-bold text-emerald-800">
-                      {pData.senior_secondary_12th?.percentage || "94.6%"}
-                    </p>
-                  </div>
+
+                  {/* Subjects Breakdown Table */}
+                  {Array.isArray(pData.senior_secondary_12th?.subjects) && pData.senior_secondary_12th.subjects.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-slate-200">
+                      <h4 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2">Subject Breakdown</h4>
+                      <div className="overflow-x-auto rounded-xl border border-slate-200">
+                        <table className="w-full text-left text-xs border-collapse">
+                          <thead className="bg-slate-100/75 border-b border-slate-200 text-slate-600 font-semibold">
+                            <tr>
+                              <th className="py-2 px-3">Subject Code</th>
+                              <th className="py-2 px-3">Subject Name</th>
+                              <th className="py-2 px-3 text-right">Marks Obtained</th>
+                              <th className="py-2 px-3 text-right">Max Marks</th>
+                              <th className="py-2 px-3 text-center">Grade</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 bg-white">
+                            {pData.senior_secondary_12th.subjects.map((sub, idx) => (
+                              <tr key={idx} className="hover:bg-slate-50/50">
+                                <td className="py-2 px-3 font-mono text-slate-500">{sub.subject_code || "—"}</td>
+                                <td className="py-2 px-3 font-medium text-slate-800">{sub.subject_name}</td>
+                                <td className="py-2 px-3 text-right font-semibold text-slate-900">{sub.marks_obtained ?? "—"}</td>
+                                <td className="py-2 px-3 text-right text-slate-500">{sub.maximum_marks ?? "—"}</td>
+                                <td className="py-2 px-3 text-center">
+                                  {sub.grade ? (
+                                    <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 font-bold text-[10px] border border-purple-200">
+                                      {sub.grade}
+                                    </span>
+                                  ) : (
+                                    <span className="text-slate-400">—</span>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Dynamic Custom Fields */}
+                  {pData.senior_secondary_12th?.custom_fields && Object.keys(pData.senior_secondary_12th.custom_fields).length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap gap-2">
+                      {Object.values(pData.senior_secondary_12th.custom_fields).map((cf) => (
+                        <div key={cf.key} className="px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-[11px] text-slate-700">
+                          <span className="font-semibold text-slate-500">{cf.label}:</span> <span className="font-bold text-slate-900">{String(cf.value)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1507,9 +1977,11 @@ export default function UniversalProfilePage() {
             >
               <Award className="w-4 h-4 text-emerald-600" />
               <h3 className="text-sm font-bold text-slate-900">Higher Education / Degree</h3>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                ✓ Currently Enrolled
-              </span>
+              {pData.education?.degree && (
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  ✓ Currently Enrolled
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-2">
               {activeEditSection === "higher_education" ? (
@@ -1593,28 +2065,38 @@ export default function UniversalProfilePage() {
                   <div>
                     <label className="text-[11px] font-bold text-slate-500 block mb-1">University / Institute</label>
                     <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
-                      {pData.education?.university_name || "Delhi Technological University"}
+                      {pData.education?.university_name || (
+                        <span className="text-slate-400 font-normal italic">Not Provided</span>
+                      )}
                     </p>
                   </div>
 
                   <div>
                     <label className="text-[11px] font-bold text-slate-500 block mb-1">Degree & Program</label>
                     <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
-                      {pData.education?.degree || "Bachelor of Technology (B.Tech)"}
+                      {pData.education?.degree || (
+                        <span className="text-slate-400 font-normal italic">Not Provided</span>
+                      )}
                     </p>
                   </div>
 
                   <div>
                     <label className="text-[11px] font-bold text-slate-500 block mb-1">Branch / Specialization</label>
                     <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
-                      {pData.education?.branch || "Computer Science and Engineering"}
+                      {pData.education?.branch || (
+                        <span className="text-slate-400 font-normal italic">Not Provided</span>
+                      )}
                     </p>
                   </div>
 
                   <div>
                     <label className="text-[11px] font-bold text-slate-500 block mb-1">Cumulative CGPA</label>
-                    <p className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200 font-bold text-emerald-800">
-                      {pData.education?.cgpa || "8.8"} / 10.0
+                    <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
+                      {pData.education?.cgpa ? (
+                        <span className="font-bold text-emerald-800">{pData.education.cgpa} / 10.0</span>
+                      ) : (
+                        <span className="text-slate-400 font-normal italic">Not Provided</span>
+                      )}
                     </p>
                   </div>
                 </>
@@ -1706,25 +2188,29 @@ export default function UniversalProfilePage() {
               )}
 
               <div className="flex flex-wrap gap-2">
-                {(activeEditSection === "skills" ? editSkillsList : pData.skills || editSkillsList).map((sk, idx) => (
-                  <div
-                    key={idx}
-                    className="p-2 bg-slate-50 rounded-xl border border-slate-200 flex items-center gap-2"
-                  >
-                    <span className="font-bold text-slate-900">{sk.skill_name}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 bg-slate-200 text-slate-700 rounded font-semibold">
-                      {sk.proficiency}
-                    </span>
-                    {activeEditSection === "skills" && (
-                      <button
-                        onClick={() => handleRemoveSkill(idx)}
-                        className="text-red-500 hover:text-red-700 font-bold ml-1"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-                ))}
+                {(activeEditSection === "skills" ? editSkillsList : pData.skills || []).length === 0 ? (
+                  <p className="text-slate-400 italic">No technical skills added yet.</p>
+                ) : (
+                  (activeEditSection === "skills" ? editSkillsList : pData.skills || []).map((sk, idx) => (
+                    <div
+                      key={idx}
+                      className="p-2 bg-slate-50 rounded-xl border border-slate-200 flex items-center gap-2"
+                    >
+                      <span className="font-bold text-slate-900">{sk.skill_name}</span>
+                      <span className="text-[10px] px-1.5 py-0.5 bg-slate-200 text-slate-700 rounded font-semibold">
+                        {sk.proficiency}
+                      </span>
+                      {activeEditSection === "skills" && (
+                        <button
+                          onClick={() => handleRemoveSkill(idx)}
+                          className="text-red-500 hover:text-red-700 font-bold ml-1"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}
@@ -1743,9 +2229,11 @@ export default function UniversalProfilePage() {
             >
               <DollarSign className="w-4 h-4 text-emerald-600" />
               <h3 className="text-sm font-bold text-slate-900">Financial & Eligibility Information</h3>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                ✓ Verified for Scholarships
-              </span>
+              {pData.eligibility?.annual_income && (
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  ✓ Verified for Scholarships
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-2">
               {activeEditSection === "financial" ? (
@@ -1825,16 +2313,24 @@ export default function UniversalProfilePage() {
                 <>
                   <div>
                     <label className="text-[11px] font-bold text-slate-500 block mb-1">Annual Family Income</label>
-                    <p className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200 font-bold text-emerald-800">
-                      ₹{pData.eligibility?.annual_income || "2,50,000"} / year
+                    <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
+                      {pData.eligibility?.annual_income ? (
+                        <span className="font-bold text-emerald-800">₹{pData.eligibility.annual_income} / year</span>
+                      ) : (
+                        <span className="text-slate-400 font-normal italic">Not Provided</span>
+                      )}
                     </p>
-                    <span className="text-[10px] text-slate-400 mt-1 block">✓ Verified from Income Certificate</span>
+                    {pData.confirmed_fields?.annual_income && (
+                      <span className="text-[10px] text-slate-400 mt-1 block">✓ Verified from Income Certificate</span>
+                    )}
                   </div>
 
                   <div>
                     <label className="text-[11px] font-bold text-slate-500 block mb-1">Social Category</label>
                     <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
-                      {pData.eligibility?.category || "General / Unreserved"}
+                      {pData.eligibility?.category || (
+                        <span className="text-slate-400 font-normal italic">Not Provided</span>
+                      )}
                     </p>
                   </div>
 
@@ -1852,6 +2348,53 @@ export default function UniversalProfilePage() {
       )}
 
       {/* =========================================================================
+          DYNAMIC CUSTOM SECTIONS (Scholarships, Domicile, Other Certificates)
+      ========================================================================= */}
+      {Array.isArray(pData.custom_sections) && pData.custom_sections.length > 0 && (
+        <>
+          {pData.custom_sections.map((cSec) => (
+            <div key={cSec.section_id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+              <div className="p-5 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                <div
+                  onClick={() => toggleSection(cSec.section_id)}
+                  className="flex items-center gap-2.5 cursor-pointer"
+                >
+                  <Award className="w-4 h-4 text-indigo-600" />
+                  <h3 className="text-sm font-bold text-slate-900">{cSec.title}</h3>
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                    Dynamic Section
+                  </span>
+                </div>
+                <div onClick={() => toggleSection(cSec.section_id)} className="cursor-pointer p-1 text-slate-400">
+                  {openSections[cSec.section_id] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </div>
+              </div>
+
+              {openSections[cSec.section_id] && (
+                <div className="p-6 space-y-4 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {cSec.fields.map((f) => (
+                      <div key={f.key}>
+                        <label className="text-[11px] font-bold text-slate-500 block mb-1">{f.label}</label>
+                        <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-semibold text-slate-900">
+                          {String(f.value || "—")}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {Boolean(cSec.metadata?.source_document_name) && (
+                    <p className="text-[10px] text-slate-400 pt-2 border-t border-slate-100">
+                      ✓ Extracted from {String(cSec.metadata?.source_document_name)}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </>
+      )}
+
+      {/* =========================================================================
           SECTION 10: VERIFIED DOCUMENTS REPOSITORY
       ========================================================================= */}
       {matchesSearch("documents marksheet certificate aadhaar income") && (
@@ -1863,8 +2406,12 @@ export default function UniversalProfilePage() {
             <div className="flex items-center gap-2.5">
               <FileCheck className="w-4 h-4 text-blue-600" />
               <h3 className="text-sm font-bold text-slate-900">Verified Documents Index</h3>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                3 Verified Documents
+              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                userDocuments.length > 0
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : "bg-slate-100 text-slate-600 border-slate-200"
+              }`}>
+                {userDocuments.length} Verified Document{userDocuments.length === 1 ? "" : "s"}
               </span>
             </div>
             {openSections.documents ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
@@ -1872,28 +2419,42 @@ export default function UniversalProfilePage() {
 
           {openSections.documents && (
             <div className="p-6 space-y-3 text-xs">
-              <div className="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden">
-                {[
-                  { name: "Class 12 Marksheet", type: "Academic Marksheet", fields: "Percentage, Board, Year, Subjects", date: "2024" },
-                  { name: "Class 10 Marksheet", type: "Academic Marksheet", fields: "Percentage, Board, Year, Roll No", date: "2022" },
-                  { name: "Aadhaar Card", type: "Identity Document", fields: "Full Name, DOB, Gender, Address", date: "UIDAI Verified" },
-                ].map((doc, i) => (
-                  <div key={i} className="p-3.5 bg-slate-50 flex items-center justify-between gap-3">
-                    <div className="space-y-0.5">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-slate-900">{doc.name}</span>
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-blue-100 text-blue-800">
-                          {doc.type}
-                        </span>
+              {userDocuments.length === 0 ? (
+                <div className="p-6 text-center space-y-2">
+                  <FileCheck className="w-8 h-8 text-slate-300 mx-auto" />
+                  <p className="font-semibold text-slate-700">0 Verified Documents</p>
+                  <p className="text-[11px] text-slate-400">
+                    No verified documents uploaded yet. Upload documents to automatically extract and verify profile details.
+                  </p>
+                  <Link
+                    href="/dashboard/documents"
+                    className="inline-flex items-center gap-1 text-xs text-blue-600 font-bold hover:underline mt-2"
+                  >
+                    Upload Documents &rarr;
+                  </Link>
+                </div>
+              ) : (
+                <div className="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden">
+                  {userDocuments.map((doc, i) => (
+                    <div key={doc.id || i} className="p-3.5 bg-slate-50 flex items-center justify-between gap-3">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-slate-900">{doc.file_name}</span>
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-blue-100 text-blue-800">
+                            {doc.document_type || "Student Document"}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500">
+                          Status: {doc.extraction_status === "completed" ? "Extracted & Verified" : doc.extraction_status} • Uploaded {new Date(doc.created_at).toLocaleDateString()}
+                        </p>
                       </div>
-                      <p className="text-[11px] text-slate-500">Extracted: {doc.fields}</p>
+                      <span className="text-[10px] font-semibold px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg shrink-0">
+                        ✓ {doc.extraction_status === "completed" ? "Confirmed" : "Uploaded"}
+                      </span>
                     </div>
-                    <span className="text-[10px] font-semibold px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg shrink-0">
-                      ✓ Confirmed
-                    </span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

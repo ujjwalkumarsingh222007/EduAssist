@@ -57,18 +57,32 @@ export default function ApplicationFormEditorPage() {
         setLoading(true);
         const supabase = createClient();
 
-        // Load user uploaded documents for linking
+        // 1. Obtain current authenticated Supabase user
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) {
+          setUserDocs([]);
+          setLoading(false);
+          return;
+        }
+
+        // 2. Load user uploaded documents for linking (strictly scoped to user.id)
         const { data: docs } = await supabase
           .from("documents")
           .select("id, file_name, document_type")
+          .eq("user_id", user.id)
           .order("created_at", { ascending: false });
+
         if (docs) setUserDocs(docs);
 
-        // Fetch application record from Supabase
+        // 3. Fetch application record from Supabase (strictly scoped to user.id)
         const { data, error } = await supabase
           .from("application_forms")
           .select("*")
           .eq("id", formId)
+          .eq("user_id", user.id)
           .maybeSingle();
 
         if (data && data.form_schema) {

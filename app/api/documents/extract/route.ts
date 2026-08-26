@@ -98,7 +98,8 @@ export async function POST(req: NextRequest) {
         extraction_status: "processing",
         updated_at: new Date().toISOString(),
       })
-      .eq("id", document_id);
+      .eq("id", document_id)
+      .eq("user_id", user.id);
 
     // 5. Download document file from Supabase Storage
     const { data: fileData, error: downloadError } = await supabase.storage
@@ -112,7 +113,8 @@ export async function POST(req: NextRequest) {
           extraction_status: "failed",
           updated_at: new Date().toISOString(),
         })
-        .eq("id", document_id);
+        .eq("id", document_id)
+        .eq("user_id", user.id);
 
       return NextResponse.json(
         { error: "Failed to download document from storage for processing." },
@@ -138,7 +140,8 @@ export async function POST(req: NextRequest) {
         extracted_data: extraction,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", document_id);
+      .eq("id", document_id)
+      .eq("user_id", user.id);
 
     if (updateError) {
       return NextResponse.json(
